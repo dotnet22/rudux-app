@@ -16,16 +16,13 @@ export const programsApi = createApi({
     getPrograms: builder.query<ProgramListResponse, ProgramListRequest>({
       query: (body) => {
         const { filterModel, ...rest } = body
-        const flattenedBody = {
-          ...rest,
-          UniversityPK: filterModel.UniversityPK,
-          CoursePK: filterModel.CoursePK,
-          SpecializationPK: filterModel.SpecializationPK,
-        }
         return {
           url: '/INS_Program/list',
           method: 'POST',
-          body: flattenedBody,
+          body: {
+            ...rest,
+            ...filterModel
+          },
         }
       },
       providesTags: ['Program'],
