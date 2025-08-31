@@ -9,7 +9,7 @@ import {
 } from '@mui/material'
 import type { Control, UseFormHandleSubmit, ControllerRenderProps, FieldError } from 'react-hook-form'
 import { Controller } from 'react-hook-form'
-import type { ProgramFilterFormData } from '../hooks/useProgramsFilter'
+import type { ProgramFilterFormData } from '../schema'
 import type { ProgramFilterModel } from '../types/program'
 
 interface DropdownOption {
