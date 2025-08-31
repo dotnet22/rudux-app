@@ -1,4 +1,5 @@
 export interface ComboBoxItem {
+  id: string
   Value: string
   Label: string
 }

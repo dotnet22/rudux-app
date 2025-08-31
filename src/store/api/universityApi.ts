@@ -18,6 +18,8 @@ export const universityApi = createApi({
         url: '/INS_University/comboBox',
         method: 'GET',
       }),
+      transformResponse: (response: { Value: string; Label: string }[]) => 
+        response.map(item => ({ ...item, id: item.Value })),
       providesTags: ['University'],
     }),
   }),

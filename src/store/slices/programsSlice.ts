@@ -13,7 +13,7 @@ export interface ProgramsState {
 }
 
 const programsAdapter = createEntityAdapter<Program & { id: string }>({
-  sortComparer: (a, b) => a.ProgramName.localeCompare(b.ProgramName),
+  sortComparer: (a: Program & { id: string }, b: Program & { id: string }) => a.ProgramName.localeCompare(b.ProgramName),
 })
 
 const initialState = programsAdapter.getInitialState<ProgramsState>({

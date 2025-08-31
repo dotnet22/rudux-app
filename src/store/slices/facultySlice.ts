@@ -9,8 +9,7 @@ export interface FacultyState {
 }
 
 const facultyAdapter = createEntityAdapter<Faculty>({
-  selectId: (faculty) => faculty.Value,
-  sortComparer: (a, b) => a.Label.localeCompare(b.Label),
+  sortComparer: (a: Faculty, b: Faculty) => a.Value.localeCompare(b.Value),
 })
 
 const initialState = facultyAdapter.getInitialState<FacultyState>({

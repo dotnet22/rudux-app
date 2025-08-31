@@ -9,8 +9,7 @@ export interface CourseState {
 }
 
 const courseAdapter = createEntityAdapter<Course>({
-  selectId: (course) => course.Value,
-  sortComparer: (a, b) => a.Label.localeCompare(b.Label),
+  sortComparer: (a: Course, b: Course) => a.Value.localeCompare(b.Value),
 })
 
 const initialState = courseAdapter.getInitialState<CourseState>({

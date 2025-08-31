@@ -12,7 +12,7 @@ export interface AcademicYearsState {
 }
 
 const academicYearsAdapter = createEntityAdapter<AcademicYear & { id: string }>({
-  sortComparer: (a, b) => a.AcademicYear.toString().localeCompare(b.AcademicYear.toString()),
+  sortComparer: (a: AcademicYear & { id: string }, b: AcademicYear & { id: string }) => a.AcademicYear.toString().localeCompare(b.AcademicYear.toString()),
 })
 
 const initialState = academicYearsAdapter.getInitialState<AcademicYearsState>({
