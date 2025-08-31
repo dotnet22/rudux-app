@@ -1,6 +1,6 @@
 import { createEntityAdapter, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../index'
-import type { Program } from '../../types/program'
+import type { Program, ProgramFilterModel } from '../../types/program'
 
 export interface ProgramsState {
   currentPage: number
@@ -9,6 +9,7 @@ export interface ProgramsState {
   sortField: string | null
   sortOrder: 'asc' | 'desc' | null
   loading: boolean
+  filters: ProgramFilterModel
 }
 
 const programsAdapter = createEntityAdapter<Program & { id: string }>({
@@ -22,6 +23,11 @@ const initialState = programsAdapter.getInitialState<ProgramsState>({
   sortField: null,
   sortOrder: null,
   loading: false,
+  filters: {
+    UniversityPK: null,
+    CoursePK: null,
+    SpecializationPK: null,
+  },
 })
 
 const programsSlice = createSlice({
@@ -46,10 +52,14 @@ const programsSlice = createSlice({
     setLoading: (state, action: PayloadAction<boolean>) => {
       state.loading = action.payload
     },
+    setFilters: (state, action: PayloadAction<ProgramFilterModel>) => {
+      state.filters = action.payload
+      state.currentPage = 0
+    },
   },
 })
 
-export const { setPage, setPageSize, setSorting, setPrograms, setLoading } = programsSlice.actions
+export const { setPage, setPageSize, setSorting, setPrograms, setLoading, setFilters } = programsSlice.actions
 
 export const {
   selectAll: selectAllPrograms,

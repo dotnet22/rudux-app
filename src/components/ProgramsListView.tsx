@@ -22,21 +22,17 @@ import type { Program, ProgramListRequest } from '../types/program'
 const ProgramsListView = () => {
   const dispatch = useDispatch()
   const programs = useSelector(selectAllPrograms)
-  const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading } = useSelector(selectProgramsState)
+  const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading, filters } = useSelector(selectProgramsState)
 
   const requestPayload: ProgramListRequest = {
     pageOffset: currentPage,
     pageSize,
     sortField,
     sortOrder,
-    filterModel: {
-      UniversityPK: null,
-      CoursePK: null,
-      SpecializationPK: null
-    },
-    UniversityPK: null,
-    CoursePK: null,
-    SpecializationPK: null
+    filterModel: filters,
+    UniversityPK: filters.UniversityPK,
+    CoursePK: filters.CoursePK,
+    SpecializationPK: filters.SpecializationPK
   }
 
   const { data, error, isLoading } = useGetProgramsQuery(requestPayload)
