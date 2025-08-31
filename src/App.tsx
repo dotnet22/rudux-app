@@ -1,6 +1,7 @@
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router'
 import AcademicYearsPage from './pages/AcademicYearsPage'
+import ProgramsPage from './pages/ProgramsPage'
 
 const theme = createTheme({
   palette: {
@@ -22,6 +23,7 @@ function App() {
         <Routes>
           <Route path="/" element={<Navigate to="/academic-years" replace />} />
           <Route path="/academic-years" element={<AcademicYearsPage />} />
+          <Route path="/programs" element={<ProgramsPage />} />
         </Routes>
       </Router>
     </ThemeProvider>
