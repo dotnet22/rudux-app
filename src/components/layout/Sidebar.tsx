@@ -37,7 +37,7 @@ export default function Sidebar({ open, onClose, variant = 'permanent', width = 
   const location = useLocation()
 
   const sidebarContent = (
-    <Box sx={{ width, height: '100%', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={{ width, height: '100%', display: 'flex', flexDirection: 'column', overflowX: 'hidden' }}>
       <Box sx={{ p: 2 }}>
         <Typography variant="h6" component="div" color="primary" fontWeight="bold">
           Academic Management
@@ -47,7 +47,7 @@ export default function Sidebar({ open, onClose, variant = 'permanent', width = 
         </Typography>
       </Box>
       <Divider />
-      <Box sx={{ flexGrow: 1, overflow: 'auto' }}>
+      <Box sx={{ flexGrow: 1, overflow: 'auto', overflowX: 'hidden' }}>
         <List sx={{ pt: 1 }}>
           {navigationItems.map((item) => {
             const Icon = item.icon
@@ -107,6 +107,7 @@ export default function Sidebar({ open, onClose, variant = 'permanent', width = 
           boxSizing: 'border-box',
           borderRight: '1px solid',
           borderColor: 'divider',
+          overflowX: 'hidden',
         },
       }}
     >
