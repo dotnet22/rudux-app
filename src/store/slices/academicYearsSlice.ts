@@ -11,8 +11,8 @@ export interface AcademicYearsState {
   loading: boolean
 }
 
-const academicYearsAdapter = createEntityAdapter<AcademicYear>({
-  sortComparer: (a: AcademicYear, b: AcademicYear) => a.academicYear.localeCompare(b.academicYear),
+const academicYearsAdapter = createEntityAdapter<AcademicYear & { id: string }>({
+  sortComparer: (a, b) => a.AcademicYear.toString().localeCompare(b.AcademicYear.toString()),
 })
 
 const initialState = academicYearsAdapter.getInitialState<AcademicYearsState>({
@@ -39,7 +39,7 @@ const academicYearsSlice = createSlice({
       state.sortField = action.payload.field
       state.sortOrder = action.payload.order
     },
-    setAcademicYears: (state, action: PayloadAction<{ data: AcademicYear[]; totalRecords: number }>) => {
+    setAcademicYears: (state, action: PayloadAction<{ data: (AcademicYear & { id: string })[]; totalRecords: number }>) => {
       academicYearsAdapter.setAll(state, action.payload.data)
       state.totalRecords = action.payload.totalRecords
     },

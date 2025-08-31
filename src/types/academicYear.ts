@@ -1,12 +1,13 @@
 export interface AcademicYear {
-  id: string
-  academicYearPK: string
-  academicYear: string
-  startDate: string
-  endDate: string
-  isActive: boolean
-  createdDate: string
-  updatedDate: string
+  AcademicYearPK: string
+  AcademicYearName: string
+  AcademicYear: number
+  AcademicYearFromDate: string
+  AcademicYearToDate: string
+  FinancialYearFromDate: string
+  FinancialYearToDate: string
+  CalendarYearFromDate: string
+  CalendarYearToDate: string
 }
 
 export interface FilterModel {
@@ -31,8 +32,6 @@ export interface AcademicYearListRequest {
 }
 
 export interface AcademicYearListResponse {
-  data: AcademicYear[]
-  totalRecords: number
-  pageOffset: number
-  pageSize: number
+  Total: number
+  Data: AcademicYear[]
 }

@@ -52,8 +52,8 @@ const ListView = () => {
 
   useEffect(() => {
     if (data) {
-      const mappedData = data.data.map(item => ({ ...item, id: item.academicYearPK }))
-      dispatch(setAcademicYears({ data: mappedData, totalRecords: data.totalRecords }))
+      const mappedData = data.Data.map((item: AcademicYear) => ({ ...item, id: item.AcademicYearPK }))
+      dispatch(setAcademicYears({ data: mappedData, totalRecords: data.Total }))
     }
   }, [dispatch, data])
 
