@@ -1,0 +1,133 @@
+import { useEffect, useCallback } from 'react'
+import { useForm, Controller, type Control } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { z } from 'zod'
+import { useWatchBatch } from '../utils/watch'
+import { useGetUniversitiesQuery } from '../store/api/universityApi'
+import { useGetFacultiesQuery } from '../store/api/facultyApi'
+import { useGetCoursesQuery } from '../store/api/courseApi'
+import type { ProgramFilterModel } from '../types/program'
+import type { University, ComboBoxResponse } from '../types/comboBox'
+
+const programFilterSchema = z.object({
+  UniversityPK: z.string().optional().nullable(),
+  CoursePK: z.string().optional().nullable(),
+  FacultyPK: z.string().optional().nullable(),
+})
+
+export type ProgramFilterFormData = z.infer<typeof programFilterSchema>
+
+interface UseProgramsFilterProps {
+  onFilterChange: (filters: ProgramFilterModel) => void
+  initialFilters?: ProgramFilterModel
+}
+
+export interface UseProgramsFilterReturn {
+  control: Control<ProgramFilterFormData>
+  handleSubmit: (onValid: (data: ProgramFilterFormData) => void) => (e?: React.BaseSyntheticEvent) => Promise<void>
+  handleClear: () => void
+  universities: University[]
+  faculties: ComboBoxResponse
+  courses: ComboBoxResponse
+  isLoadingUniversities: boolean
+  isLoadingFaculties: boolean
+  isLoadingCourses: boolean
+  Controller: typeof Controller
+}
+
+export const useProgramsFilter = ({ 
+  onFilterChange, 
+  initialFilters 
+}: UseProgramsFilterProps): UseProgramsFilterReturn => {
+  const {
+    control,
+    handleSubmit,
+    reset,
+    watch,
+    setValue,
+  } = useForm<ProgramFilterFormData>({
+    resolver: zodResolver(programFilterSchema),
+    defaultValues: {
+      UniversityPK: initialFilters?.UniversityPK || null,
+      CoursePK: initialFilters?.CoursePK || null,
+      FacultyPK: initialFilters?.FacultyPK || null,
+    },
+  })
+
+  // Watch for cascading changes
+  const watchedFields = useWatchBatch(control, ["UniversityPK", "FacultyPK"] as const)
+  const { UniversityPK, FacultyPK } = watchedFields
+
+  // API queries
+  const { 
+    data: universities = [], 
+    isLoading: isLoadingUniversities 
+  } = useGetUniversitiesQuery()
+
+  const { 
+    data: faculties = [], 
+    isLoading: isLoadingFaculties 
+  } = useGetFacultiesQuery(UniversityPK!, {
+    skip: !UniversityPK
+  })
+
+  const { 
+    data: courses = [], 
+    isLoading: isLoadingCourses 
+  } = useGetCoursesQuery(FacultyPK!, {
+    skip: !FacultyPK
+  })
+
+  // Handle cascading resets
+  useEffect(() => {
+    // Reset faculty when university changes
+    if (UniversityPK) {
+      setValue('FacultyPK', null)
+      setValue('CoursePK', null)
+    }
+  }, [UniversityPK, setValue])
+
+  useEffect(() => {
+    // Reset course when faculty changes
+    if (FacultyPK) {
+      setValue('CoursePK', null)
+    }
+  }, [FacultyPK, setValue])
+
+  const onSubmit = useCallback((data: ProgramFilterFormData) => {
+    onFilterChange({
+      UniversityPK: data.UniversityPK || null,
+      CoursePK: data.CoursePK || null,
+      FacultyPK: data.FacultyPK || null,
+    })
+  }, [onFilterChange])
+
+  const handleClear = useCallback(() => {
+    const clearedFilters = {
+      UniversityPK: null,
+      CoursePK: null,
+      FacultyPK: null,
+    }
+    reset(clearedFilters)
+    onFilterChange(clearedFilters)
+  }, [reset, onFilterChange])
+
+  // Auto-submit on changes
+  useEffect(() => {
+    const subscription = watch(() => handleSubmit(onSubmit)())
+    return () => subscription.unsubscribe()
+  }, [handleSubmit, watch, onSubmit])
+
+  return {
+    control,
+    handleSubmit,
+    handleClear,
+    universities,
+    faculties,
+    courses,
+    isLoadingUniversities,
+    isLoadingFaculties,
+    isLoadingCourses,
+    Controller,
+  }
+}

@@ -1,23 +1,15 @@
-import { useEffect, useCallback } from 'react'
-import { useForm, Controller } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
 import {
   Paper,
-  TextField,
   Button,
   Box,
   Typography,
+  Autocomplete,
+  TextField,
+  CircularProgress,
 } from '@mui/material'
+import { useProgramsFilter, type ProgramFilterFormData } from '../hooks/useProgramsFilter'
+import { useWatchBatch } from '../utils/watch'
 import type { ProgramFilterModel } from '../types/program'
-
-const programFilterSchema = z.object({
-  UniversityPK: z.string().optional().nullable(),
-  CoursePK: z.string().optional().nullable(),
-  FacultyPK: z.string().optional().nullable(),
-})
-
-export type ProgramFilterFormData = z.infer<typeof programFilterSchema>
 
 interface ProgramsFilterProps {
   onFilterChange: (filters: ProgramFilterModel) => void
@@ -28,40 +20,26 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
   const {
     control,
     handleSubmit,
-    reset,
-    watch,
-  } = useForm<ProgramFilterFormData>({
-    resolver: zodResolver(programFilterSchema),
-    defaultValues: {
-      UniversityPK: initialFilters?.UniversityPK || null,
-      CoursePK: initialFilters?.CoursePK || null,
-      FacultyPK: initialFilters?.FacultyPK || null,
-    },
-  })
+    handleClear,
+    universities,
+    faculties,
+    courses,
+    isLoadingUniversities,
+    isLoadingFaculties,
+    isLoadingCourses,
+    Controller,
+  } = useProgramsFilter({ onFilterChange, initialFilters })
 
-  const onSubmit = useCallback((data: ProgramFilterFormData) => {
+  const watchedFields = useWatchBatch(control, ["UniversityPK", "FacultyPK"] as const)
+  const { UniversityPK, FacultyPK } = watchedFields
+
+  const onSubmit = (data: ProgramFilterFormData) => {
     onFilterChange({
       UniversityPK: data.UniversityPK || null,
       CoursePK: data.CoursePK || null,
       FacultyPK: data.FacultyPK || null,
     })
-  }, [onFilterChange])
-
-  const handleClear = () => {
-    const clearedFilters = {
-      UniversityPK: null,
-      CoursePK: null,
-      FacultyPK: null,
-    }
-    reset(clearedFilters)
-    onFilterChange(clearedFilters)
   }
-
-  // Watch for changes and auto-submit (optional - you can remove this if you prefer manual submit)
-  useEffect(() => {
-    const subscription = watch(() => handleSubmit(onSubmit)())
-    return () => subscription.unsubscribe()
-  }, [handleSubmit, watch, onSubmit])
 
   return (
     <Paper sx={{ p: 3, mb: 2 }}>
@@ -74,15 +52,33 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
             name="UniversityPK"
             control={control}
             render={({ field, fieldState }) => (
-              <TextField
+              <Autocomplete
                 {...field}
-                label="University ID"
-                placeholder="Enter University Primary Key"
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-                value={field.value || ''}
-                onChange={(e) => field.onChange(e.target.value || null)}
+                options={universities}
+                getOptionLabel={(option) => option.Label}
+                getOptionKey={(option) => option.Value}
+                value={universities.find(u => u.Value === field.value) || null}
+                onChange={(_, value) => field.onChange(value?.Value || null)}
+                loading={isLoadingUniversities}
                 sx={{ flex: '1 1 300px', minWidth: 300 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="University"
+                    placeholder="Select University"
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {isLoadingUniversities ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
             )}
           />
@@ -90,15 +86,34 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
             name="FacultyPK"
             control={control}
             render={({ field, fieldState }) => (
-              <TextField
+              <Autocomplete
                 {...field}
-                label="Faculty ID"
-                placeholder="Enter Faculty Primary Key"
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-                value={field.value || ''}
-                onChange={(e) => field.onChange(e.target.value || null)}
+                options={faculties}
+                getOptionLabel={(option) => option.Label}
+                getOptionKey={(option) => option.Value}
+                value={faculties.find(f => f.Value === field.value) || null}
+                onChange={(_, value) => field.onChange(value?.Value || null)}
+                loading={isLoadingFaculties}
+                disabled={!UniversityPK}
                 sx={{ flex: '1 1 300px', minWidth: 300 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Faculty"
+                    placeholder="Select Faculty"
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {isLoadingFaculties ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
             )}
           />
@@ -106,15 +121,34 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
             name="CoursePK"
             control={control}
             render={({ field, fieldState }) => (
-              <TextField
+              <Autocomplete
                 {...field}
-                label="Course ID"
-                placeholder="Enter Course Primary Key"
-                error={!!fieldState.error}
-                helperText={fieldState.error?.message}
-                value={field.value || ''}
-                onChange={(e) => field.onChange(e.target.value || null)}
+                options={courses}
+                getOptionLabel={(option) => option.Label}
+                getOptionKey={(option) => option.Value}
+                value={courses.find(c => c.Value === field.value) || null}
+                onChange={(_, value) => field.onChange(value?.Value || null)}
+                loading={isLoadingCourses}
+                disabled={!FacultyPK}
                 sx={{ flex: '1 1 300px', minWidth: 300 }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    label="Course"
+                    placeholder="Select Course"
+                    error={!!fieldState.error}
+                    helperText={fieldState.error?.message}
+                    InputProps={{
+                      ...params.InputProps,
+                      endAdornment: (
+                        <>
+                          {isLoadingCourses ? <CircularProgress color="inherit" size={20} /> : null}
+                          {params.InputProps.endAdornment}
+                        </>
+                      ),
+                    }}
+                  />
+                )}
               />
             )}
           />
