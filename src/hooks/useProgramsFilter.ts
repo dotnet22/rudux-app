@@ -2,10 +2,13 @@ import { useEffect, useCallback } from 'react'
 import { useForm, Controller, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { useDispatch } from 'react-redux'
 import { useWatchBatch } from '../utils/watch'
 import { useGetUniversitiesQuery } from '../store/api/universityApi'
 import { useGetFacultiesQuery } from '../store/api/facultyApi'
 import { useGetCoursesQuery } from '../store/api/courseApi'
+import { useFriendlyFilterResolver } from './useFriendlyFilterResolver'
+import { setFriendlyFilters } from '../store/slices/programsSlice'
 import type { ProgramFilterModel } from '../types/program'
 import type { University, ComboBoxResponse } from '../types/comboBox'
 
@@ -39,6 +42,8 @@ export const useProgramsFilter = ({
   onFilterChange, 
   initialFilters 
 }: UseProgramsFilterProps): UseProgramsFilterReturn => {
+  const dispatch = useDispatch()
+  
   const {
     control,
     handleSubmit,
@@ -77,6 +82,26 @@ export const useProgramsFilter = ({
   } = useGetCoursesQuery(FacultyPK!, {
     skip: !FacultyPK
   })
+
+  // Get current filter values for friendly filter resolution
+  const currentFilters = useWatchBatch(control, ["UniversityPK", "FacultyPK", "CoursePK"] as const)
+  
+  // Resolve friendly filter values
+  const friendlyFilter = useFriendlyFilterResolver({
+    filterModel: {
+      UniversityPK: currentFilters.UniversityPK || null,
+      FacultyPK: currentFilters.FacultyPK || null,
+      CoursePK: currentFilters.CoursePK || null,
+    },
+    universities,
+    faculties,
+    courses,
+  })
+
+  // Update friendly filters in Redux when they change
+  useEffect(() => {
+    dispatch(setFriendlyFilters(friendlyFilter))
+  }, [dispatch, friendlyFilter])
 
   // Handle cascading resets
   useEffect(() => {

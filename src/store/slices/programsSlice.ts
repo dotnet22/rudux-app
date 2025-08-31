@@ -1,6 +1,6 @@
 import { createEntityAdapter, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../index'
-import type { Program, ProgramFilterModel } from '../../types/program'
+import type { Program, ProgramFilterModel, FriendlyFilterRecord } from '../../types/program'
 
 export interface ProgramsState {
   currentPage: number
@@ -10,6 +10,7 @@ export interface ProgramsState {
   sortOrder: 'asc' | 'desc' | null
   loading: boolean
   filters: ProgramFilterModel
+  friendlyFilter: FriendlyFilterRecord<ProgramFilterModel>
 }
 
 const programsAdapter = createEntityAdapter<Program & { id: string }>({
@@ -27,6 +28,11 @@ const initialState = programsAdapter.getInitialState<ProgramsState>({
     UniversityPK: null,
     CoursePK: null,
     FacultyPK: null,
+  },
+  friendlyFilter: {
+    UniversityPK: { Label: 'All', Value: null },
+    CoursePK: { Label: 'All', Value: null },
+    FacultyPK: { Label: 'All', Value: null },
   },
 })
 
@@ -56,10 +62,13 @@ const programsSlice = createSlice({
       state.filters = action.payload
       state.currentPage = 0
     },
+    setFriendlyFilters: (state, action: PayloadAction<FriendlyFilterRecord<ProgramFilterModel>>) => {
+      state.friendlyFilter = action.payload
+    },
   },
 })
 
-export const { setPage, setPageSize, setSorting, setPrograms, setLoading, setFilters } = programsSlice.actions
+export const { setPage, setPageSize, setSorting, setPrograms, setLoading, setFilters, setFriendlyFilters } = programsSlice.actions
 
 export const {
   selectAll: selectAllPrograms,

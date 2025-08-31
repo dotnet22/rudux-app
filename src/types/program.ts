@@ -29,3 +29,10 @@ export interface ProgramListResponse {
   Total: number
   Data: Program[]
 }
+
+export type FriendlyFilterModel = {
+  Label: string
+  Value: string | number | boolean | null
+}
+
+export type FriendlyFilterRecord<T> = Record<keyof T, FriendlyFilterModel>
