@@ -88,7 +88,18 @@ export const useProgramsFilter = () => {
   const { handleFriendlyFilterChange } = useGenericFriendlyFilterChange({
     currentFilterValues,
     setValue,
-    onFilterChange: handleFilterChange,
+    onFilterChange: (newFilters) => {
+      // Convert partial filter update to full ProgramFilterModel
+      const fullFilters: ProgramFilterModel = {
+        UniversityPK: newFilters.UniversityPK || null,
+        CoursePK: newFilters.CoursePK || null,
+        FacultyPK: newFilters.FacultyPK || null,
+        IsActive: null,
+        SearchTerm: null,
+        CreatedAfter: null,
+      }
+      handleFilterChange(fullFilters)
+    },
     cascadingConfig: [
       { parent: 'UniversityPK', children: ['FacultyPK', 'CoursePK'] },
       { parent: 'FacultyPK', children: ['CoursePK'] }

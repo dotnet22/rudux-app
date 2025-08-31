@@ -7,11 +7,8 @@ test('handleFriendlyFilterChange performance test', async ({ page }) => {
   // Wait for the page to load completely
   await page.waitForLoadState('networkidle');
   
-  // Look for filter chips (may not be visible initially if no filters are active)
-  const activeFiltersHeading = page.locator('text=Active Filters');
-  
   // Start performance measurement
-  let renderCount = 0;
+  const renderCount = 0;
   
   // Monitor console for React DevTools warnings about excessive renders
   page.on('console', msg => {

@@ -18,8 +18,9 @@ export const resolveLabelFromComboBoxData = (
     return 'All'
   }
   
-  const item = comboBoxData.find(item => 
-    'Value' in item ? item.Value === value : false
+  const items = Array.isArray(comboBoxData) ? comboBoxData : []
+  const item = items.find(item => 
+    item && typeof item === 'object' && 'Value' in item ? item.Value === value : false
   )
   
   return item?.Label || 'Unknown'

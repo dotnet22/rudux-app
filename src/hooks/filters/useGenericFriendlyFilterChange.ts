@@ -47,12 +47,12 @@ export const useGenericFriendlyFilterChange = <T extends Record<string, unknown>
   // Extract primitives from current filter values for optimal memoization
   const filterPrimitives = useMemo(() => {
     // Convert filter values to friendly filter format for primitive extraction
-    const friendlyFilterLike = {} as Record<keyof T, { Label: string; Value: unknown }>
+    const friendlyFilterLike = {} as Record<keyof T, { Label: string; Value: string | number | boolean | Date | null }>
 
     for (const key in currentFilterValues) {
       friendlyFilterLike[key] = {
         Label: String(currentFilterValues[key] ?? 'All'),
-        Value: currentFilterValues[key]
+        Value: currentFilterValues[key] as string | number | boolean | Date | null
       }
     }
 
@@ -80,7 +80,7 @@ export const useGenericFriendlyFilterChange = <T extends Record<string, unknown>
     }
 
     // Batch form state updates to minimize rerenders
-    fieldsToReset.forEach(field => setValue(field, null as T[typeof field]))
+    fieldsToReset.forEach(field => setValue(field as any, null as any))
 
     // Single state update
     onFilterChange(updatedFilters)

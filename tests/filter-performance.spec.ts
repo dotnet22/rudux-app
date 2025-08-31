@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
 
-test('filter performance and rerender optimization test', async ({ page, context }) => {
+test('filter performance and rerender optimization test', async ({ page }) => {
   // Navigate to the programs page
   await page.goto('/');
   
@@ -8,7 +8,7 @@ test('filter performance and rerender optimization test', async ({ page, context
   await page.waitForLoadState('networkidle');
   
   // Capture React DevTools performance if available
-  let consoleMessages: string[] = [];
+  const consoleMessages: string[] = [];
   page.on('console', msg => {
     consoleMessages.push(msg.text());
   });
@@ -97,7 +97,7 @@ test('filter performance and rerender optimization test', async ({ page, context
   
   // Measure final page performance
   const metrics = await page.evaluate(() => ({
-    jsHeapSize: (performance as any).memory?.usedJSHeapSize || 'N/A',
+    jsHeapSize: (performance as unknown as { memory?: { usedJSHeapSize: number } }).memory?.usedJSHeapSize || 'N/A',
     renderTime: performance.now(),
     resourceCount: performance.getEntriesByType('resource').length
   }));

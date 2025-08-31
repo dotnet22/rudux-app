@@ -11,7 +11,8 @@
       "Bash(npx eslint:*)",
       "Bash(npm install:*)",
       "Bash(npx playwright:*)",
-      "Bash(npm run lint:*)"
+      "Bash(npm run lint:*)",
+      "Bash(git add:*)"
     ],
     "deny": [],
     "ask": []

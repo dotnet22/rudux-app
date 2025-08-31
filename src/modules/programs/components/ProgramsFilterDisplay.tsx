@@ -1,5 +1,5 @@
 import { Card, CardContent, Typography, Chip, Box } from '@mui/material'
-import { memo, useCallback, useMemo } from 'react'
+import { memo, useMemo } from 'react'
 import type { ProgramFilterModel } from '../types/program'
 
 interface ProgramsFilterDisplayProps {

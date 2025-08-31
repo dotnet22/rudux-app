@@ -39,8 +39,9 @@ export const resolveDropdownField = (
     return 'All'
   }
   
-  const item = dataSource.find(item => 
-    'Value' in item ? item.Value === value : false
+  const items = Array.isArray(dataSource) ? dataSource : []
+  const item = items.find(item => 
+    item && typeof item === 'object' && 'Value' in item ? item.Value === value : false
   )
   
   return item?.Label || 'Unknown'
