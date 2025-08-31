@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { ProgramFilterModel, FriendlyFilterRecord } from '../types/program'
+import type { ProgramFilterModel, FriendlyFilterRecord } from '../modules/programs/types/program'
 import type { ComboBoxItem, University } from '../types/comboBox'
 import { 
   createFriendlyFilterValue, 

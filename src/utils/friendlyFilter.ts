@@ -1,5 +1,5 @@
 import dayjs from 'dayjs'
-import type { FriendlyFilterModel, FriendlyFilterRecord } from '../types/program'
+import type { FriendlyFilterModel, FriendlyFilterRecord } from '../modules/programs/types/program'
 import type { ComboBoxItem, University } from '../types/comboBox'
 
 export const createFriendlyFilterValue = (

@@ -1,5 +1,5 @@
 import { useMemo } from 'react'
-import type { FriendlyFilterRecord } from '../../types/program'
+import type { FriendlyFilterRecord } from '../../modules/programs/types/program'
 import type { FieldResolverConfig } from '../../utils/filters/fieldResolvers'
 import { resolveFieldValue } from '../../utils/filters/fieldResolvers'
 import { createFriendlyFilterValue } from '../../utils/friendlyFilter'

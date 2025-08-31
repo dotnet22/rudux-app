@@ -1,5 +1,5 @@
 import { createEntityAdapter, createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import type { RootState } from '../index'
+import type { RootState } from '../../../../store/index'
 import type { Program, ProgramFilterModel, FriendlyFilterRecord } from '../../types/program'
 
 export interface ProgramsState {

@@ -5,8 +5,8 @@
  * with different filter models and configurations.
  */
 
-import type { ProgramFilterModel } from '../../types/program'
-import type { FilterModel } from '../../types/academicYear'
+import type { ProgramFilterModel } from '../../modules/programs/types/program'
+import type { FilterModel } from '../../modules/academic-years/types/academicYear'
 import type { ComboBoxItem, University } from '../../types/comboBox'
 import { 
   useGenericFriendlyFilterResolver,

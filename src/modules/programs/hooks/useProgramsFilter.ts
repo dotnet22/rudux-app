@@ -2,24 +2,15 @@ import { useCallback, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { z } from 'zod'
-import { useWatchBatch } from '../utils/watch'
-import { useCascadingFields } from '../utils/form/useCascadingFields'
-import { useGetUniversitiesQuery } from '../store/api/universityApi'
-import { useGetFacultiesQuery } from '../store/api/facultyApi'
-import { useGetCoursesQuery } from '../store/api/courseApi'
-import { useGenericFriendlyFilterWithMemoization } from './filters/useGenericFriendlyFilterResolver'
+import { useWatchBatch } from '../../../utils/watch'
+import { useCascadingFields } from '../../../utils/form/useCascadingFields'
+import { useGetUniversitiesQuery } from '../../../store/api/universityApi'
+import { useGetFacultiesQuery } from '../../../store/api/facultyApi'
+import { useGetCoursesQuery } from '../../../store/api/courseApi'
+import { useGenericFriendlyFilterWithMemoization } from '../../../hooks/filters/useGenericFriendlyFilterResolver'
 import { setFilters, setFriendlyFilters, selectProgramsState } from '../store/slices/programsSlice'
 import type { ProgramFilterModel } from '../types/program'
-
-// Filter form schema
-const programFilterSchema = z.object({
-  UniversityPK: z.string().optional().nullable(),
-  CoursePK: z.string().optional().nullable(),
-  FacultyPK: z.string().optional().nullable(),
-})
-
-export type ProgramFilterFormData = z.infer<typeof programFilterSchema>
+import { programFilterSchema, type ProgramFilterFormData } from '../schema'
 
 export const useProgramsFilter = () => {
   const dispatch = useDispatch()

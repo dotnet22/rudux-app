@@ -1,4 +1,4 @@
-import type { FriendlyFilterRecord } from '../../types/program'
+import type { FriendlyFilterRecord } from '../../modules/programs/types/program'
 
 /**
  * Extracts primitive values from a friendly filter record for optimal memoization.

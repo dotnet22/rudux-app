@@ -1,7 +1,7 @@
 import { ThemeProvider, createTheme, CssBaseline } from '@mui/material'
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router'
-import AcademicYearsPage from './pages/AcademicYearsPage'
-import ProgramsPage from './pages/ProgramsPage'
+import AcademicYearsPage from './modules/academic-years/pages/AcademicYearsPage'
+import ProgramsPage from './modules/programs/pages/ProgramsPage'
 
 const theme = createTheme({
   palette: {
