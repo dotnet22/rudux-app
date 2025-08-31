@@ -5,7 +5,6 @@ import {
   type GridColDef,
   type GridPaginationModel,
   type GridSortModel,
-  type GridRenderCellParams,
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography } from '@mui/material'
 import { useGetProgramsQuery } from '../store/api/programsApi'
