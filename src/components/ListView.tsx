@@ -59,18 +59,18 @@ const ListView = () => {
 
   const columns: GridColDef[] = [
     {
-      field: 'academicYearPK',
+      field: 'AcademicYearPK',
       headerName: 'ID',
       width: 300,
     },
     {
-      field: 'academicYear',
+      field: 'AcademicYear',
       headerName: 'Academic Year',
       width: 200,
       flex: 1,
     },
     {
-      field: 'startDate',
+      field: 'AcademicYearFromDate',
       headerName: 'Start Date',
       width: 150,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
@@ -78,7 +78,7 @@ const ListView = () => {
       },
     },
     {
-      field: 'endDate',
+      field: 'AcademicYearToDate',
       headerName: 'End Date',
       width: 150,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
@@ -86,25 +86,17 @@ const ListView = () => {
       },
     },
     {
-      field: 'isActive',
+      field: 'status',
       headerName: 'Status',
       width: 120,
-      renderCell: (params: GridRenderCellParams<AcademicYear>) => {
+      renderCell: () => {
         return (
           <Chip
-            label={params.value ? 'Active' : 'Inactive'}
-            color={params.value ? 'success' : 'default'}
+            label='Inactive'
+            color='default'
             size="small"
           />
         )
-      },
-    },
-    {
-      field: 'createdDate',
-      headerName: 'Created Date',
-      width: 150,
-      renderCell: (params: GridRenderCellParams<AcademicYear>) => {
-        return new Date(params.value).toLocaleDateString()
       },
     },
   ]

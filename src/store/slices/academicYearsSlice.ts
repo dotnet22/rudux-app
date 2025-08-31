@@ -57,13 +57,6 @@ export const {
   selectIds: selectAcademicYearIds,
 } = academicYearsAdapter.getSelectors((state: RootState) => state.academicYears)
 
-export const selectAcademicYearsState = (state: RootState) => ({
-  currentPage: state.academicYears.currentPage,
-  pageSize: state.academicYears.pageSize,
-  totalRecords: state.academicYears.totalRecords,
-  sortField: state.academicYears.sortField,
-  sortOrder: state.academicYears.sortOrder,
-  loading: state.academicYears.loading,
-})
+export const selectAcademicYearsState = (state: RootState) => state.academicYears
 
 export default academicYearsSlice.reducer
