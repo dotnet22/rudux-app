@@ -1,8 +1,9 @@
 import { useSelector } from 'react-redux'
 import { Card, CardContent, Typography, Chip, Box } from '@mui/material'
+import { memo } from 'react'
 import { selectProgramsState } from '../store/slices/programsSlice'
 
-export const ProgramsFilterDisplay = () => {
+export const ProgramsFilterDisplay = memo(() => {
   const { friendlyFilter } = useSelector(selectProgramsState)
 
   return (
@@ -24,4 +25,6 @@ export const ProgramsFilterDisplay = () => {
       </CardContent>
     </Card>
   )
-}
+})
+
+ProgramsFilterDisplay.displayName = 'ProgramsFilterDisplay'

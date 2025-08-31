@@ -1,4 +1,4 @@
-import { useEffect, useCallback, useRef } from 'react'
+import { useEffect, useCallback, useRef, useMemo } from 'react'
 import { useForm, Controller, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -58,9 +58,9 @@ export const useProgramsFilter = ({
     },
   })
 
-  // Watch for cascading changes
-  const watchedFields = useWatchBatch(control, ["UniversityPK", "FacultyPK"] as const)
-  const { UniversityPK, FacultyPK } = watchedFields
+  // Watch all filter fields for cascading changes and friendly filter resolution
+  const allFilterFields = useWatchBatch(control, ["UniversityPK", "FacultyPK", "CoursePK"] as const)
+  const { UniversityPK, FacultyPK, CoursePK } = allFilterFields
 
   // API queries
   const {
@@ -82,15 +82,14 @@ export const useProgramsFilter = ({
     skip: !FacultyPK
   })
 
-  // Get current filter values for friendly filter resolution
-  const currentFilters = useWatchBatch(control, ["UniversityPK", "FacultyPK", "CoursePK"] as const)
+  // Use the same watched fields for friendly filter resolution (optimization: removed duplicate useWatchBatch call)
 
   // Resolve friendly filter values
   const friendlyFilter = useFriendlyFilterResolver({
     filterModel: {
-      UniversityPK: currentFilters.UniversityPK || null,
-      FacultyPK: currentFilters.FacultyPK || null,
-      CoursePK: currentFilters.CoursePK || null,
+      UniversityPK: UniversityPK || null,
+      FacultyPK: FacultyPK || null,
+      CoursePK: CoursePK || null,
     },
     universities,
     faculties,
@@ -98,11 +97,23 @@ export const useProgramsFilter = ({
   })
 
   // Update friendly filters in Redux when they change
-  // Using JSON stringify for deep comparison to prevent unnecessary updates
-  const friendlyFilterString = JSON.stringify(friendlyFilter)
+  // Using memoized values based on actual filter data to prevent unnecessary updates
+  const memoizedFriendlyFilter = useMemo(() => ({
+    UniversityPK: friendlyFilter.UniversityPK,
+    FacultyPK: friendlyFilter.FacultyPK,
+    CoursePK: friendlyFilter.CoursePK,
+  }), [
+    friendlyFilter.UniversityPK?.Label,
+    friendlyFilter.UniversityPK?.Value,
+    friendlyFilter.FacultyPK?.Label, 
+    friendlyFilter.FacultyPK?.Value,
+    friendlyFilter.CoursePK?.Label,
+    friendlyFilter.CoursePK?.Value
+  ])
+  
   useEffect(() => {
-    dispatch(setFriendlyFilters(friendlyFilter))
-  }, [dispatch, friendlyFilterString])
+    dispatch(setFriendlyFilters(memoizedFriendlyFilter))
+  }, [dispatch, memoizedFriendlyFilter])
 
   // Handle cascading resets with refs to avoid infinite loops
   const previousUniversityRef = useRef(UniversityPK)
