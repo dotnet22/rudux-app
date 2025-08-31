@@ -12,7 +12,9 @@
       "Bash(npm install:*)",
       "Bash(npx playwright:*)",
       "Bash(npm run lint:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)"
     ],
     "deny": [],
     "ask": []
