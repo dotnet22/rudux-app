@@ -14,7 +14,7 @@ export interface Program {
 export interface ProgramFilterModel {
   UniversityPK: string | null
   CoursePK: string | null
-  SpecializationPK: string | null
+  FacultyPK: string | null
 }
 
 export interface ProgramListRequest {

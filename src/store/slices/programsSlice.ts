@@ -26,7 +26,7 @@ const initialState = programsAdapter.getInitialState<ProgramsState>({
   filters: {
     UniversityPK: null,
     CoursePK: null,
-    SpecializationPK: null,
+    FacultyPK: null,
   },
 })
 
