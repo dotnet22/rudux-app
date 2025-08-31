@@ -10,10 +10,7 @@ import type { FilterModel } from '../../types/academicYear'
 import type { ComboBoxItem, University } from '../../types/comboBox'
 import { 
   useGenericFriendlyFilterResolver,
-  useAutoFriendlyFilterResolver,
-  createProgramFilterResolverConfig,
-  createAcademicYearFilterResolverConfig,
-  commonFieldResolvers
+  useAutoFriendlyFilterResolver
 } from './index'
 import { extractFriendlyFilterPrimitives } from '../../utils/filters/primitiveExtraction'
 
@@ -27,17 +24,20 @@ export const useProgramFilterExample = (
   faculties: ComboBoxItem[],
   courses: ComboBoxItem[]
 ) => {
-  // Create configuration for program filters
-  const fieldResolvers = createProgramFilterResolverConfig(
-    universities, 
-    faculties, 
-    courses
-  )
-
-  // Use the generic resolver
+  // Use the generic resolver directly - no presets needed
   const friendlyFilter = useGenericFriendlyFilterResolver({
     filterModel: programFilters,
-    fieldResolvers,
+    fieldResolvers: {
+      UniversityPK: { type: 'dropdown', dataSource: universities },
+      FacultyPK: { type: 'dropdown', dataSource: faculties },
+      CoursePK: { type: 'dropdown', dataSource: courses },
+      IsActive: { 
+        type: 'boolean',
+        booleanLabels: { true: 'Active', false: 'Inactive', null: 'All' }
+      },
+      SearchTerm: { type: 'string' },
+      CreatedAfter: { type: 'date', dateFormat: 'MM/DD/YYYY' }
+    },
     dateFormat: 'MM/DD/YYYY'
   })
 
@@ -58,16 +58,15 @@ export const useAcademicYearFilterExample = (
   courses: ComboBoxItem[],
   specializations: ComboBoxItem[]
 ) => {
-  const fieldResolvers = createAcademicYearFilterResolverConfig(
-    universities,
-    faculties,
-    courses,
-    specializations
-  )
-
   return useGenericFriendlyFilterResolver({
     filterModel: academicYearFilters,
-    fieldResolvers
+    fieldResolvers: {
+      ProgramName: { type: 'string' },
+      UniversityPK: { type: 'dropdown', dataSource: universities },
+      CoursePK: { type: 'dropdown', dataSource: courses },
+      FacultyPK: { type: 'dropdown', dataSource: faculties },
+      SpecializationPK: { type: 'dropdown', dataSource: specializations }
+    }
   })
 }
 
@@ -154,12 +153,15 @@ export const useCommonResolversExample = (
   return useGenericFriendlyFilterResolver({
     filterModel: filters,
     fieldResolvers: {
-      UniversityPK: commonFieldResolvers.universityDropdown(universities),
-      FacultyPK: commonFieldResolvers.facultyDropdown(faculties),
-      CoursePK: commonFieldResolvers.courseDropdown(courses),
-      IsActive: commonFieldResolvers.activeBoolean,
-      SearchTerm: commonFieldResolvers.searchTerm,
-      CreatedAfter: commonFieldResolvers.standardDate
+      UniversityPK: { type: 'dropdown', dataSource: universities },
+      FacultyPK: { type: 'dropdown', dataSource: faculties },
+      CoursePK: { type: 'dropdown', dataSource: courses },
+      IsActive: { 
+        type: 'boolean',
+        booleanLabels: { true: 'Active', false: 'Inactive', null: 'All' }
+      },
+      SearchTerm: { type: 'string' },
+      CreatedAfter: { type: 'date', dateFormat: 'MM/DD/YYYY' }
     }
   })
 }

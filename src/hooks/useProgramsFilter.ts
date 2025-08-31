@@ -7,7 +7,8 @@ import { useWatchBatch } from '../utils/watch'
 import { useGetUniversitiesQuery } from '../store/api/universityApi'
 import { useGetFacultiesQuery } from '../store/api/facultyApi'
 import { useGetCoursesQuery } from '../store/api/courseApi'
-import { useFriendlyFilterResolver } from './useFriendlyFilterResolver'
+import { useGenericFriendlyFilterResolver } from './filters/useGenericFriendlyFilterResolver'
+import { extractFriendlyFilterPrimitives } from '../utils/filters/primitiveExtraction'
 import { setFriendlyFilters } from '../store/slices/programsSlice'
 import type { ProgramFilterModel } from '../types/program'
 import type { University, ComboBoxResponse } from '../types/comboBox'
@@ -96,34 +97,30 @@ export const useProgramsFilter = ({
     CreatedAfter: null,
   }), [UniversityPK, FacultyPK, CoursePK])
 
-  // Resolve friendly filter values
-  const friendlyFilter = useFriendlyFilterResolver({
+  // Resolve friendly filter values using the new generic system
+  const friendlyFilter = useGenericFriendlyFilterResolver({
     filterModel,
-    universities,
-    faculties,
-    courses,
+    fieldResolvers: {
+      UniversityPK: { type: 'dropdown', dataSource: universities },
+      FacultyPK: { type: 'dropdown', dataSource: faculties },
+      CoursePK: { type: 'dropdown', dataSource: courses },
+      IsActive: { 
+        type: 'boolean',
+        booleanLabels: { true: 'Active', false: 'Inactive', null: 'All' }
+      },
+      SearchTerm: { type: 'string' },
+      CreatedAfter: { type: 'date', dateFormat: 'MM/DD/YYYY' }
+    },
+    dateFormat: 'MM/DD/YYYY'
   })
 
   // Update friendly filters in Redux when they change
-  // Only update when the actual values change, not on every render
+  // Use automatic primitive extraction for optimal performance (same as manual approach)
+  const friendlyFilterPrimitives = extractFriendlyFilterPrimitives(friendlyFilter)
   useEffect(() => {
     dispatch(setFriendlyFilters(friendlyFilter))
-  }, [
-    dispatch,
-    // Only depend on the actual values, not the objects
-    friendlyFilter.UniversityPK?.Label,
-    friendlyFilter.UniversityPK?.Value,
-    friendlyFilter.FacultyPK?.Label, 
-    friendlyFilter.FacultyPK?.Value,
-    friendlyFilter.CoursePK?.Label,
-    friendlyFilter.CoursePK?.Value,
-    friendlyFilter.IsActive?.Label,
-    friendlyFilter.IsActive?.Value,
-    friendlyFilter.SearchTerm?.Label,
-    friendlyFilter.SearchTerm?.Value,
-    friendlyFilter.CreatedAfter?.Label,
-    friendlyFilter.CreatedAfter?.Value,
-  ])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch, ...friendlyFilterPrimitives])
 
   // Handle cascading resets with refs to avoid infinite loops
   const previousUniversityRef = useRef(UniversityPK)
