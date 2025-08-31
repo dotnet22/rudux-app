@@ -15,6 +15,9 @@ export interface ProgramFilterModel {
   UniversityPK: string | null
   CoursePK: string | null
   FacultyPK: string | null
+  IsActive: boolean | null
+  SearchTerm: string | null
+  CreatedAfter: Date | null
 }
 
 export interface ProgramListRequest {
@@ -32,7 +35,7 @@ export interface ProgramListResponse {
 
 export type FriendlyFilterModel = {
   Label: string
-  Value: string | number | boolean | null
+  Value: string | number | boolean | Date | null
 }
 
 export type FriendlyFilterRecord<T> = Record<keyof T, FriendlyFilterModel>

@@ -1,9 +1,10 @@
+import dayjs from 'dayjs'
 import type { FriendlyFilterModel, FriendlyFilterRecord } from '../types/program'
 import type { ComboBoxItem, University } from '../types/comboBox'
 
 export const createFriendlyFilterValue = (
   label: string,
-  value: string | number | boolean | null
+  value: string | number | boolean | Date | null
 ): FriendlyFilterModel => ({
   Label: label,
   Value: value,
@@ -24,12 +25,27 @@ export const resolveLabelFromComboBoxData = (
   return item?.Label || 'Unknown'
 }
 
+export const resolveBooleanLabel = (value: boolean | null): string => {
+  if (value === null) return 'All'
+  return value ? 'Active' : 'Inactive'
+}
+
+export const resolveStringLabel = (value: string | null): string => {
+  if (!value || value.trim() === '') return 'All'
+  return `"${value}"`
+}
+
+export const resolveDateLabel = (value: Date | null, format = 'MM/DD/YYYY'): string => {
+  if (!value) return 'All'
+  return dayjs(value).format(format)
+}
+
 export const createEmptyFriendlyFilter = (): FriendlyFilterModel => 
   createFriendlyFilterValue('All', null)
 
-export const createFriendlyFilterRecord = <T extends Record<string, string | null>>(
+export const createFriendlyFilterRecord = <T extends Record<string, any>>(
   filterModel: T,
-  labelResolvers: Record<keyof T, (value: string | null) => string>
+  labelResolvers: Record<keyof T, (value: any) => string>
 ): FriendlyFilterRecord<T> => {
   const result = {} as FriendlyFilterRecord<T>
   
