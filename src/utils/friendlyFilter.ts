@@ -43,9 +43,9 @@ export const resolveDateLabel = (value: Date | null, format = 'MM/DD/YYYY'): str
 export const createEmptyFriendlyFilter = (): FriendlyFilterModel => 
   createFriendlyFilterValue('All', null)
 
-export const createFriendlyFilterRecord = <T extends Record<string, any>>(
+export const createFriendlyFilterRecord = <T>(
   filterModel: T,
-  labelResolvers: Record<keyof T, (value: any) => string>
+  labelResolvers: Record<keyof T, (value: unknown) => string>
 ): FriendlyFilterRecord<T> => {
   const result = {} as FriendlyFilterRecord<T>
   
@@ -54,7 +54,7 @@ export const createFriendlyFilterRecord = <T extends Record<string, any>>(
     const resolver = labelResolvers[key]
     const label = resolver ? resolver(value) : String(value || 'All')
     
-    result[key] = createFriendlyFilterValue(label, value)
+    result[key] = createFriendlyFilterValue(label, value as string | number | boolean | Date | null)
   }
   
   return result
