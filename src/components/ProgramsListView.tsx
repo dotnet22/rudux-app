@@ -1,50 +1,21 @@
-import { useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import {
   DataGrid,
   type GridColDef,
-  type GridPaginationModel,
-  type GridSortModel,
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography } from '@mui/material'
-import { useGetProgramsQuery } from '../store/api/programsApi'
-import {
-  selectAllPrograms,
-  selectProgramsState,
-  setPage,
-  setPageSize,
-  setSorting,
-  setPrograms,
-  setLoading,
-} from '../store/slices/programsSlice'
-import type { Program, ProgramListRequest } from '../types/program'
+import { useProgramsList } from '../hooks/useProgramsList'
 
 const ProgramsListView = () => {
-  const dispatch = useDispatch()
-  const programs = useSelector(selectAllPrograms)
-  const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading, filters } = useSelector(selectProgramsState)
-
-  const requestPayload: ProgramListRequest = {
-    pageOffset: currentPage,
+  const {
+    programs,
+    currentPage,
     pageSize,
-    sortField,
-    sortOrder,
-    filterModel: filters
-  }
-
-  const { data, error, isLoading } = useGetProgramsQuery(requestPayload)
-
-  useEffect(() => {
-    dispatch(setLoading(isLoading))
-  }, [dispatch, isLoading])
-
-  useEffect(() => {
-    if (data) {
-      const mappedData = data.Data.map((item: Program) => ({ ...item, id: item.ProgramPK }))
-      dispatch(setPrograms({ data: mappedData, totalRecords: data.Total }))
-      dispatch(setLoading(false))
-    }
-  }, [dispatch, data])
+    totalRecords,
+    loading,
+    error,
+    handlePaginationModelChange,
+    handleSortModelChange,
+  } = useProgramsList()
 
   const columns: GridColDef[] = [
     {
@@ -109,27 +80,6 @@ const ProgramsListView = () => {
     },
   ]
 
-  const handlePaginationModelChange = (model: GridPaginationModel) => {
-    if (model.page !== currentPage) {
-      dispatch(setLoading(true))
-      dispatch(setPage(model.page))
-    }
-    if (model.pageSize !== pageSize) {
-      dispatch(setLoading(true))
-      dispatch(setPageSize(model.pageSize))
-    }
-  }
-
-  const handleSortModelChange = (model: GridSortModel) => {
-    if (model.length > 0) {
-      const sort = model[0]
-      dispatch(setLoading(true))
-      dispatch(setSorting({ field: sort.field, order: sort.sort as 'asc' | 'desc' | null }))
-    } else {
-      dispatch(setLoading(true))
-      dispatch(setSorting({ field: null, order: null }))
-    }
-  }
 
   if (error) {
     return (
