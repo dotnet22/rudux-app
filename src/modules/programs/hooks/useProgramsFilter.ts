@@ -8,6 +8,7 @@ import { useGetUniversitiesQuery } from '../../../store/api/universityApi'
 import { useGetFacultiesQuery } from '../../../store/api/facultyApi'
 import { useGetCoursesQuery } from '../../../store/api/courseApi'
 import { useGenericFriendlyFilterWithMemoization } from '../../../hooks/filters/useGenericFriendlyFilterResolver'
+import { useGenericFriendlyFilterChange } from '../../../hooks/filters/useGenericFriendlyFilterChange'
 import { setFilters, setFriendlyFilters, selectProgramsState } from '../store/slices/programsSlice'
 import type { ProgramFilterModel } from '../types/program'
 import { programFilterSchema, type ProgramFilterFormData } from '../schema'
@@ -73,47 +74,26 @@ export const useProgramsFilter = () => {
     dispatch(setFilters(newFilters))
   }, [dispatch])
 
-  // Static cascading configuration - constant reference for optimal performance
-  const cascadingMap = useMemo(() => new Map<keyof ProgramFilterModel, (keyof ProgramFilterModel)[]>([
-    ['UniversityPK', ['FacultyPK', 'CoursePK']],
-    ['FacultyPK', ['CoursePK']]
-  ]), [])
+  // Current filter values for the generic handler
+  const currentFilterValues = useMemo(() => ({
+    UniversityPK: UniversityPK || null,
+    FacultyPK: FacultyPK || null,
+    CoursePK: CoursePK || null,
+    IsActive: null,
+    SearchTerm: null,
+    CreatedAfter: null,
+  }), [UniversityPK, FacultyPK, CoursePK])
 
-  // Optimized method to find cascading children - uses Map for O(1) lookup
-  const getCascadingChildren = useCallback((fieldKey: keyof ProgramFilterModel): readonly (keyof ProgramFilterModel)[] => {
-    return cascadingMap.get(fieldKey) || []
-  }, [cascadingMap])
-
-  // Optimized filter change handler with minimal object creation and batched form updates
-  const handleFriendlyFilterChange = useCallback((fieldKey: keyof ProgramFilterModel) => {
-    const cascadingChildren = getCascadingChildren(fieldKey)
-    
-    // Build filter updates object with minimal operations
-    const filterUpdates: Partial<ProgramFilterModel> = { [fieldKey]: null }
-    const fieldsToReset: (keyof ProgramFilterModel)[] = [fieldKey]
-    
-    // Add cascading children to both update objects
-    for (const child of cascadingChildren) {
-      filterUpdates[child] = null
-      fieldsToReset.push(child)
-    }
-
-    // Build complete filter state only once
-    const updatedFilters: ProgramFilterModel = {
-      UniversityPK: filterUpdates.UniversityPK ?? (UniversityPK || null),
-      FacultyPK: filterUpdates.FacultyPK ?? (FacultyPK || null),
-      CoursePK: filterUpdates.CoursePK ?? (CoursePK || null),
-      IsActive: filterUpdates.IsActive ?? null,
-      SearchTerm: filterUpdates.SearchTerm ?? null,
-      CreatedAfter: filterUpdates.CreatedAfter ?? null,
-    }
-
-    // Batch form state updates to minimize rerenders
-    fieldsToReset.forEach(field => setValue(field, null))
-
-    // Single Redux state update
-    handleFilterChange(updatedFilters)
-  }, [getCascadingChildren, UniversityPK, FacultyPK, CoursePK, setValue, handleFilterChange])
+  // Use the generic friendly filter change handler with cascading configuration
+  const { handleFriendlyFilterChange } = useGenericFriendlyFilterChange({
+    currentFilterValues,
+    setValue,
+    onFilterChange: handleFilterChange,
+    cascadingConfig: [
+      { parent: 'UniversityPK', children: ['FacultyPK', 'CoursePK'] },
+      { parent: 'FacultyPK', children: ['CoursePK'] }
+    ]
+  })
 
   const handleClear = useCallback(() => {
     const clearedFilters = { UniversityPK: null, CoursePK: null, FacultyPK: null, IsActive: null, SearchTerm: null, CreatedAfter: null }
