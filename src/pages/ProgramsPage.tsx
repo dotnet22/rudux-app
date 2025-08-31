@@ -6,8 +6,8 @@ import { useProgramsFilter } from '../hooks/useProgramsFilter'
 import { useProgramsFilterDisplay } from '../hooks/useProgramsFilterDisplay'
 
 const ProgramsPage = () => {
-  const filterHookData = useProgramsFilter()
-  const filterDisplayHookData = useProgramsFilterDisplay()
+  const filterProps = useProgramsFilter()
+  const filterDisplayProps = useProgramsFilterDisplay()
 
   return (
     <Container maxWidth="xl" sx={{ py: 4 }}>
@@ -20,8 +20,8 @@ const ProgramsPage = () => {
           filterDisplay: ProgramsFilterDisplay
         }}
         slotProps={{
-          filter: filterHookData,
-          filterDisplay: filterDisplayHookData
+          filter: filterProps,
+          filterDisplay: filterDisplayProps
         }}
       />
     </Container>
