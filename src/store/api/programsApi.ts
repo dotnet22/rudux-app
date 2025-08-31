@@ -14,11 +14,20 @@ export const programsApi = createApi({
   tagTypes: ['Program'],
   endpoints: (builder) => ({
     getPrograms: builder.query<ProgramListResponse, ProgramListRequest>({
-      query: (body) => ({
-        url: '/INS_Program/list',
-        method: 'POST',
-        body,
-      }),
+      query: (body) => {
+        const { filterModel, ...rest } = body
+        const flattenedBody = {
+          ...rest,
+          UniversityPK: filterModel.UniversityPK,
+          CoursePK: filterModel.CoursePK,
+          SpecializationPK: filterModel.SpecializationPK,
+        }
+        return {
+          url: '/INS_Program/list',
+          method: 'POST',
+          body: flattenedBody,
+        }
+      },
       providesTags: ['Program'],
     }),
   }),
