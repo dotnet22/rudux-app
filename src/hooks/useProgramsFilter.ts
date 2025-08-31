@@ -91,6 +91,9 @@ export const useProgramsFilter = ({
     UniversityPK: UniversityPK || null,
     FacultyPK: FacultyPK || null,
     CoursePK: CoursePK || null,
+    IsActive: null,
+    SearchTerm: null,
+    CreatedAfter: null,
   }), [UniversityPK, FacultyPK, CoursePK])
 
   // Resolve friendly filter values
@@ -114,6 +117,12 @@ export const useProgramsFilter = ({
     friendlyFilter.FacultyPK?.Value,
     friendlyFilter.CoursePK?.Label,
     friendlyFilter.CoursePK?.Value,
+    friendlyFilter.IsActive?.Label,
+    friendlyFilter.IsActive?.Value,
+    friendlyFilter.SearchTerm?.Label,
+    friendlyFilter.SearchTerm?.Value,
+    friendlyFilter.CreatedAfter?.Label,
+    friendlyFilter.CreatedAfter?.Value,
   ])
 
   // Handle cascading resets with refs to avoid infinite loops
@@ -154,6 +163,9 @@ export const useProgramsFilter = ({
       UniversityPK: null,
       CoursePK: null,
       FacultyPK: null,
+      IsActive: null,
+      SearchTerm: null,
+      CreatedAfter: null,
     }
     reset(clearedFilters)
     onFilterChange(clearedFilters)

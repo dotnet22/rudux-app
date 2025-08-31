@@ -28,11 +28,17 @@ const initialState = programsAdapter.getInitialState<ProgramsState>({
     UniversityPK: null,
     CoursePK: null,
     FacultyPK: null,
+    IsActive: null,
+    SearchTerm: null,
+    CreatedAfter: null,
   },
   friendlyFilter: {
     UniversityPK: { Label: 'All', Value: null },
     CoursePK: { Label: 'All', Value: null },
     FacultyPK: { Label: 'All', Value: null },
+    IsActive: { Label: 'All', Value: null },
+    SearchTerm: { Label: 'All', Value: null },
+    CreatedAfter: { Label: 'All', Value: null },
   },
 })
 

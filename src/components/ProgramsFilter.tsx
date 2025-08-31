@@ -36,6 +36,9 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
       UniversityPK: data.UniversityPK || null,
       CoursePK: data.CoursePK || null,
       FacultyPK: data.FacultyPK || null,
+      IsActive: null,
+      SearchTerm: null,
+      CreatedAfter: null,
     })
   }
 
