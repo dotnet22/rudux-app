@@ -23,9 +23,6 @@ export interface ProgramListRequest {
   sortField: string | null
   sortOrder: string | null
   filterModel: ProgramFilterModel
-  UniversityPK: string | null
-  CoursePK: string | null
-  SpecializationPK: string | null
 }
 
 export interface ProgramListResponse {

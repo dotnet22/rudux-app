@@ -29,10 +29,7 @@ const ProgramsListView = () => {
     pageSize,
     sortField,
     sortOrder,
-    filterModel: filters,
-    UniversityPK: filters.UniversityPK,
-    CoursePK: filters.CoursePK,
-    SpecializationPK: filters.SpecializationPK
+    filterModel: filters
   }
 
   const { data, error, isLoading } = useGetProgramsQuery(requestPayload)
