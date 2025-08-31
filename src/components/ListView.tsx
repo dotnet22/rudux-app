@@ -142,7 +142,7 @@ const ListView = () => {
           onPaginationModelChange={handlePaginationModelChange}
           onSortModelChange={handleSortModelChange}
           rowCount={totalRecords}
-          loading={loading}
+          loading={isLoading}
           pageSizeOptions={[10, 20, 50, 100]}
           disableRowSelectionOnClick
           sx={{
