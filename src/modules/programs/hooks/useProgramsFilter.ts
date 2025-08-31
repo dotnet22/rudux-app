@@ -73,6 +73,40 @@ export const useProgramsFilter = () => {
     dispatch(setFilters(newFilters))
   }, [dispatch])
 
+  const handleFriendlyFilterChange = useCallback((fieldKey: keyof ProgramFilterModel) => {
+    const currentFilters = {
+      UniversityPK: UniversityPK || null,
+      FacultyPK: FacultyPK || null,
+      CoursePK: CoursePK || null,
+      IsActive: null,
+      SearchTerm: null,
+      CreatedAfter: null,
+    }
+
+    // Clear the specific field
+    const updatedFilters = { ...currentFilters, [fieldKey]: null }
+
+    // Handle cascading resets for dependent fields
+    if (fieldKey === 'UniversityPK') {
+      updatedFilters.FacultyPK = null
+      updatedFilters.CoursePK = null
+    } else if (fieldKey === 'FacultyPK') {
+      updatedFilters.CoursePK = null
+    }
+
+    // Update form state
+    setValue(fieldKey, null)
+    if (fieldKey === 'UniversityPK') {
+      setValue('FacultyPK', null)
+      setValue('CoursePK', null)
+    } else if (fieldKey === 'FacultyPK') {
+      setValue('CoursePK', null)
+    }
+
+    // Update Redux state
+    handleFilterChange(updatedFilters)
+  }, [UniversityPK, FacultyPK, CoursePK, setValue, handleFilterChange])
+
   const handleClear = useCallback(() => {
     const clearedFilters = { UniversityPK: null, CoursePK: null, FacultyPK: null, IsActive: null, SearchTerm: null, CreatedAfter: null }
     reset(clearedFilters)
@@ -93,5 +127,6 @@ export const useProgramsFilter = () => {
     UniversityPK,
     FacultyPK,
     onFilterChange: handleFilterChange,
+    onFriendlyFilterChange: handleFriendlyFilterChange,
   }
 }

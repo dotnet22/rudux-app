@@ -21,7 +21,10 @@ const ProgramsPage = () => {
         }}
         slotProps={{
           filter: filterProps,
-          filterDisplay: filterDisplayProps
+          filterDisplay: {
+            ...filterDisplayProps,
+            onFriendlyFilterChange: filterProps.onFriendlyFilterChange
+          }
         }}
       />
     </Box>
