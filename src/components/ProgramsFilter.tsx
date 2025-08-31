@@ -8,7 +8,6 @@ import {
   CircularProgress,
 } from '@mui/material'
 import { useProgramsFilter, type ProgramFilterFormData } from '../hooks/useProgramsFilter'
-import { useWatchBatch } from '../utils/watch'
 import type { ProgramFilterModel } from '../types/program'
 
 interface ProgramsFilterProps {
@@ -28,10 +27,9 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
     isLoadingFaculties,
     isLoadingCourses,
     Controller,
+    UniversityPK,
+    FacultyPK,
   } = useProgramsFilter({ onFilterChange, initialFilters })
-
-  const watchedFields = useWatchBatch(control, ["UniversityPK", "FacultyPK"] as const)
-  const { UniversityPK, FacultyPK } = watchedFields
 
   const onSubmit = (data: ProgramFilterFormData) => {
     onFilterChange({

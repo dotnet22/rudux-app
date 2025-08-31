@@ -36,6 +36,8 @@ export interface UseProgramsFilterReturn {
   isLoadingFaculties: boolean
   isLoadingCourses: boolean
   Controller: typeof Controller
+  UniversityPK: string | null | undefined
+  FacultyPK: string | null | undefined
 }
 
 export const useProgramsFilter = ({
@@ -84,36 +86,35 @@ export const useProgramsFilter = ({
 
   // Use the same watched fields for friendly filter resolution (optimization: removed duplicate useWatchBatch call)
 
+  // Memoize filterModel to prevent unnecessary recalculations
+  const filterModel = useMemo(() => ({
+    UniversityPK: UniversityPK || null,
+    FacultyPK: FacultyPK || null,
+    CoursePK: CoursePK || null,
+  }), [UniversityPK, FacultyPK, CoursePK])
+
   // Resolve friendly filter values
   const friendlyFilter = useFriendlyFilterResolver({
-    filterModel: {
-      UniversityPK: UniversityPK || null,
-      FacultyPK: FacultyPK || null,
-      CoursePK: CoursePK || null,
-    },
+    filterModel,
     universities,
     faculties,
     courses,
   })
 
   // Update friendly filters in Redux when they change
-  // Using memoized values based on actual filter data to prevent unnecessary updates
-  const memoizedFriendlyFilter = useMemo(() => ({
-    UniversityPK: friendlyFilter.UniversityPK,
-    FacultyPK: friendlyFilter.FacultyPK,
-    CoursePK: friendlyFilter.CoursePK,
-  }), [
+  // Only update when the actual values change, not on every render
+  useEffect(() => {
+    dispatch(setFriendlyFilters(friendlyFilter))
+  }, [
+    dispatch,
+    // Only depend on the actual values, not the objects
     friendlyFilter.UniversityPK?.Label,
     friendlyFilter.UniversityPK?.Value,
     friendlyFilter.FacultyPK?.Label, 
     friendlyFilter.FacultyPK?.Value,
     friendlyFilter.CoursePK?.Label,
-    friendlyFilter.CoursePK?.Value
+    friendlyFilter.CoursePK?.Value,
   ])
-  
-  useEffect(() => {
-    dispatch(setFriendlyFilters(memoizedFriendlyFilter))
-  }, [dispatch, memoizedFriendlyFilter])
 
   // Handle cascading resets with refs to avoid infinite loops
   const previousUniversityRef = useRef(UniversityPK)
@@ -177,5 +178,7 @@ export const useProgramsFilter = ({
     isLoadingFaculties,
     isLoadingCourses,
     Controller,
+    UniversityPK,
+    FacultyPK,
   }
 }
