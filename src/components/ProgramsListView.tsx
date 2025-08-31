@@ -5,7 +5,17 @@ import {
 import { Box, Chip, Paper, Typography } from '@mui/material'
 import { useProgramsList } from '../hooks/useProgramsList'
 
-const ProgramsListView = () => {
+// Slots interfaces
+interface ProgramsListViewSlots {
+  filter: React.ElementType
+  filterDisplay: React.ElementType
+}
+
+interface ProgramsListViewProps {
+  slots?: Partial<ProgramsListViewSlots>
+}
+
+const ProgramsListView = ({ slots }: ProgramsListViewProps) => {
   const {
     programs,
     currentPage,
@@ -80,7 +90,6 @@ const ProgramsListView = () => {
     },
   ]
 
-
   if (error) {
     return (
       <Paper sx={{ p: 3, mt: 2 }}>
@@ -89,43 +98,61 @@ const ProgramsListView = () => {
     )
   }
 
+  // Get slot components - use defaults if not provided
+  const FilterSlot = slots?.filter
+  const FilterDisplaySlot = slots?.filterDisplay
+
   return (
-    <Paper sx={{ p: 2, mt: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Programs
-      </Typography>
-      <Box sx={{ height: 600, width: '100%' }}>
-        <DataGrid
-          rows={programs}
-          columns={columns}
-          paginationMode="server"
-          sortingMode="server"
-          paginationModel={{ page: currentPage, pageSize }}
-          onPaginationModelChange={handlePaginationModelChange}
-          onSortModelChange={handleSortModelChange}
-          rowCount={totalRecords}
-          loading={loading}
-          pageSizeOptions={[10, 20, 50, 100]}
-          disableRowSelectionOnClick
-          slotProps={{
-            loadingOverlay: {
-              variant: 'skeleton',
-              noRowsVariant: 'skeleton',
-            },
-          }}
-          sx={{
-            '& .MuiDataGrid-cell': {
-              borderBottom: '1px solid #e0e0e0',
-            },
-            '& .MuiDataGrid-columnHeaders': {
-              backgroundColor: '#f5f5f5',
-              borderBottom: '2px solid #e0e0e0',
-            },
-          }}
-        />
-      </Box>
-    </Paper>
+    <>
+      {/* Render Filter Component */}
+      {FilterSlot && <FilterSlot />}
+      
+      {/* Render Filter Display Component */}
+      {FilterDisplaySlot && <FilterDisplaySlot />}
+      
+      {/* Data Grid */}
+      <Paper sx={{ p: 2, mt: 2 }}>
+        <Typography variant="h5" gutterBottom>
+          Programs
+        </Typography>
+        <Box sx={{ height: 600, width: '100%' }}>
+          <DataGrid
+            rows={programs}
+            columns={columns}
+            paginationMode="server"
+            sortingMode="server"
+            paginationModel={{ page: currentPage, pageSize }}
+            onPaginationModelChange={handlePaginationModelChange}
+            onSortModelChange={handleSortModelChange}
+            rowCount={totalRecords}
+            loading={loading}
+            pageSizeOptions={[10, 20, 50, 100]}
+            disableRowSelectionOnClick
+            slotProps={{
+              loadingOverlay: {
+                variant: 'skeleton',
+                noRowsVariant: 'skeleton',
+              },
+            }}
+            sx={{
+              '& .MuiDataGrid-cell': {
+                borderBottom: '1px solid #e0e0e0',
+              },
+              '& .MuiDataGrid-columnHeaders': {
+                backgroundColor: '#f5f5f5',
+                borderBottom: '2px solid #e0e0e0',
+              },
+            }}
+          />
+        </Box>
+      </Paper>
+    </>
   )
 }
 
+ProgramsListView.defaultProps = {
+  slots: {}
+}
+
 export default ProgramsListView
+export type { ProgramsListViewProps }

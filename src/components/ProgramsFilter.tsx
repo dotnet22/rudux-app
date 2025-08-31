@@ -8,14 +8,8 @@ import {
   CircularProgress,
 } from '@mui/material'
 import { useProgramsFilter, type ProgramFilterFormData } from '../hooks/useProgramsFilter'
-import type { ProgramFilterModel } from '../types/program'
 
-interface ProgramsFilterProps {
-  onFilterChange: (filters: ProgramFilterModel) => void
-  initialFilters?: ProgramFilterModel
-}
-
-const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps) => {
+const ProgramsFilter = () => {
   const {
     control,
     handleSubmit,
@@ -29,7 +23,8 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
     Controller,
     UniversityPK,
     FacultyPK,
-  } = useProgramsFilter({ onFilterChange, initialFilters })
+    onFilterChange,
+  } = useProgramsFilter()
 
   const onSubmit = (data: ProgramFilterFormData) => {
     onFilterChange({

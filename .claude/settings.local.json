@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(D:\\Projects\\new-arch/**)",
+      "Bash(npm run lint)",
+      "Bash(npm run build:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

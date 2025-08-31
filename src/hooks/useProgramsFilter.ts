@@ -1,18 +1,18 @@
-import { useEffect, useCallback, useRef, useMemo } from 'react'
-import { useForm, Controller, type Control } from 'react-hook-form'
+import { useCallback, useEffect, useRef } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useDispatch } from 'react-redux'
 import { useWatchBatch } from '../utils/watch'
 import { useGetUniversitiesQuery } from '../store/api/universityApi'
 import { useGetFacultiesQuery } from '../store/api/facultyApi'
 import { useGetCoursesQuery } from '../store/api/courseApi'
 import { useGenericFriendlyFilterResolver } from './filters/useGenericFriendlyFilterResolver'
 import { extractFriendlyFilterPrimitives } from '../utils/filters/primitiveExtraction'
-import { setFriendlyFilters } from '../store/slices/programsSlice'
+import { setFilters, setFriendlyFilters, selectProgramsState } from '../store/slices/programsSlice'
 import type { ProgramFilterModel } from '../types/program'
-import type { University, ComboBoxResponse } from '../types/comboBox'
 
+// Filter form schema
 const programFilterSchema = z.object({
   UniversityPK: z.string().optional().nullable(),
   CoursePK: z.string().optional().nullable(),
@@ -21,32 +21,11 @@ const programFilterSchema = z.object({
 
 export type ProgramFilterFormData = z.infer<typeof programFilterSchema>
 
-interface UseProgramsFilterProps {
-  onFilterChange: (filters: ProgramFilterModel) => void
-  initialFilters?: ProgramFilterModel
-}
-
-export interface UseProgramsFilterReturn {
-  control: Control<ProgramFilterFormData>
-  handleSubmit: (onValid: (data: ProgramFilterFormData) => void) => (e?: React.BaseSyntheticEvent) => Promise<void>
-  handleClear: () => void
-  universities: University[]
-  faculties: ComboBoxResponse
-  courses: ComboBoxResponse
-  isLoadingUniversities: boolean
-  isLoadingFaculties: boolean
-  isLoadingCourses: boolean
-  Controller: typeof Controller
-  UniversityPK: string | null | undefined
-  FacultyPK: string | null | undefined
-}
-
-export const useProgramsFilter = ({
-  onFilterChange,
-  initialFilters
-}: UseProgramsFilterProps): UseProgramsFilterReturn => {
+export const useProgramsFilter = () => {
   const dispatch = useDispatch()
+  const { filters } = useSelector(selectProgramsState)
 
+  // Filter form setup
   const {
     control,
     handleSubmit,
@@ -55,9 +34,9 @@ export const useProgramsFilter = ({
   } = useForm<ProgramFilterFormData>({
     resolver: zodResolver(programFilterSchema),
     defaultValues: {
-      UniversityPK: initialFilters?.UniversityPK || null,
-      CoursePK: initialFilters?.CoursePK || null,
-      FacultyPK: initialFilters?.FacultyPK || null,
+      UniversityPK: filters?.UniversityPK || null,
+      CoursePK: filters?.CoursePK || null,
+      FacultyPK: filters?.FacultyPK || null,
     },
   })
 
@@ -65,7 +44,7 @@ export const useProgramsFilter = ({
   const allFilterFields = useWatchBatch(control, ["UniversityPK", "FacultyPK", "CoursePK"] as const)
   const { UniversityPK, FacultyPK, CoursePK } = allFilterFields
 
-  // API queries
+  // API queries for filters
   const {
     data: universities = [],
     isLoading: isLoadingUniversities
@@ -85,21 +64,16 @@ export const useProgramsFilter = ({
     skip: !FacultyPK
   })
 
-  // Use the same watched fields for friendly filter resolution (optimization: removed duplicate useWatchBatch call)
-
-  // Memoize filterModel to prevent unnecessary recalculations
-  const filterModel = useMemo(() => ({
-    UniversityPK: UniversityPK || null,
-    FacultyPK: FacultyPK || null,
-    CoursePK: CoursePK || null,
-    IsActive: null,
-    SearchTerm: null,
-    CreatedAfter: null,
-  }), [UniversityPK, FacultyPK, CoursePK])
-
-  // Resolve friendly filter values using the new generic system
+  // Resolve friendly filter values
   const friendlyFilter = useGenericFriendlyFilterResolver({
-    filterModel,
+    filterModel: {
+      UniversityPK: UniversityPK || null,
+      FacultyPK: FacultyPK || null,
+      CoursePK: CoursePK || null,
+      IsActive: null,
+      SearchTerm: null,
+      CreatedAfter: null,
+    },
     fieldResolvers: {
       UniversityPK: { type: 'dropdown', dataSource: universities },
       FacultyPK: { type: 'dropdown', dataSource: faculties },
@@ -115,7 +89,6 @@ export const useProgramsFilter = ({
   })
 
   // Update friendly filters in Redux when they change
-  // Use automatic primitive extraction for optimal performance (same as manual approach)
   const friendlyFilterPrimitives = extractFriendlyFilterPrimitives(friendlyFilter)
   useEffect(() => {
     dispatch(setFriendlyFilters(friendlyFilter))
@@ -147,13 +120,9 @@ export const useProgramsFilter = ({
     }
   }, [FacultyPK, setValue])
 
-  // const onSubmit = useCallback((data: ProgramFilterFormData) => {
-  //   onFilterChange({
-  //     UniversityPK: data.UniversityPK || null,
-  //     CoursePK: data.CoursePK || null,
-  //     FacultyPK: data.FacultyPK || null,
-  //   })
-  // }, [onFilterChange])
+  const handleFilterChange = useCallback((newFilters: ProgramFilterModel) => {
+    dispatch(setFilters(newFilters))
+  }, [dispatch])
 
   const handleClear = useCallback(() => {
     const clearedFilters = {
@@ -165,16 +134,8 @@ export const useProgramsFilter = ({
       CreatedAfter: null,
     }
     reset(clearedFilters)
-    onFilterChange(clearedFilters)
-  }, [reset, onFilterChange])
-
-  // Remove auto-submit to prevent infinite loops
-  // Auto-submit functionality is handled by explicit form submission
-  // Auto-submit on changes
-  // useEffect(() => {
-  //   const subscription = watch(() => handleSubmit(onSubmit)())
-  //   return () => subscription.unsubscribe()
-  // }, [handleSubmit, watch, onSubmit])
+    handleFilterChange(clearedFilters)
+  }, [reset, handleFilterChange])
 
   return {
     control,
@@ -189,5 +150,6 @@ export const useProgramsFilter = ({
     Controller,
     UniversityPK,
     FacultyPK,
+    onFilterChange: handleFilterChange,
   }
 }

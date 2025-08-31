@@ -1,26 +1,28 @@
-import { useSelector } from 'react-redux'
 import { Card, CardContent, Typography, Chip, Box } from '@mui/material'
 import { memo } from 'react'
-import { selectProgramsState } from '../store/slices/programsSlice'
+import { useProgramsFilterDisplay } from '../hooks/useProgramsFilterDisplay'
 
 export const ProgramsFilterDisplay = memo(() => {
-  const { friendlyFilter } = useSelector(selectProgramsState)
+  const { friendlyFilter } = useProgramsFilterDisplay()
 
   return (
-    <Card>
+    <Card sx={{ mb: 2 }}>
       <CardContent>
         <Typography variant="h6" gutterBottom>
           Active Filters
         </Typography>
         <Box display="flex" gap={1} flexWrap="wrap">
-          {Object.entries(friendlyFilter).map(([key, filter]) => (
-            <Chip
-              key={key}
-              label={`${key.replace('PK', '')}: ${filter.Label}`}
-              variant={filter.Value ? "filled" : "outlined"}
-              size="small"
-            />
-          ))}
+          {Object.entries(friendlyFilter).map(([key, filter]) => {
+            const filterItem = filter as { Label: string; Value: unknown }
+            return (
+              <Chip
+                key={key}
+                label={`${key.replace('PK', '')}: ${filterItem.Label}`}
+                variant={filterItem.Value ? "filled" : "outlined"}
+                size="small"
+              />
+            )
+          })}
         </Box>
       </CardContent>
     </Card>
