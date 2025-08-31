@@ -1,4 +1,4 @@
-import { Container, Typography } from '@mui/material'
+import { Typography, Box } from '@mui/material'
 import ProgramsListView from '../components/ProgramsListView'
 import ProgramsFilter from '../components/ProgramsFilter'
 import { ProgramsFilterDisplay } from '../components/ProgramsFilterDisplay'
@@ -10,7 +10,7 @@ const ProgramsPage = () => {
   const filterDisplayProps = useProgramsFilterDisplay()
 
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Programs Management
       </Typography>
@@ -24,7 +24,7 @@ const ProgramsPage = () => {
           filterDisplay: filterDisplayProps
         }}
       />
-    </Container>
+    </Box>
   )
 }
 

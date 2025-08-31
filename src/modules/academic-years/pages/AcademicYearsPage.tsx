@@ -1,14 +1,14 @@
-import { Container, Typography } from '@mui/material'
+import { Typography, Box } from '@mui/material'
 import ListView from '../components/AcademicYearsListView'
 
 const AcademicYearsPage = () => {
   return (
-    <Container maxWidth="xl" sx={{ py: 4 }}>
+    <Box>
       <Typography variant="h4" component="h1" gutterBottom>
         Academic Years Management
       </Typography>
       <ListView />
-    </Container>
+    </Box>
   )
 }
 

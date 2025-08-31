@@ -39,53 +39,62 @@ const ProgramsListView = ({ slots, slotProps }: ProgramsListProps) => {
     {
       field: 'ProgramPK',
       headerName: 'Program ID',
-      width: 300,
+      minWidth: 200,
+      flex: 0.8,
     },
     {
       field: 'ProgramName',
       headerName: 'Program Name',
-      width: 250,
-      flex: 1,
+      minWidth: 180,
+      flex: 1.2,
     },
     {
       field: 'ProgramCode',
       headerName: 'Code',
-      width: 120,
+      minWidth: 80,
+      flex: 0.4,
     },
     {
       field: 'UniversityShortName',
       headerName: 'University',
-      width: 120,
+      minWidth: 80,
+      flex: 0.4,
     },
     {
       field: 'CourseShortName',
       headerName: 'Course',
-      width: 150,
+      minWidth: 100,
+      flex: 0.6,
     },
     {
       field: 'InstituteShortName',
       headerName: 'Institute',
-      width: 120,
+      minWidth: 80,
+      flex: 0.4,
     },
     {
       field: 'DepartmentShortName',
       headerName: 'Department',
-      width: 120,
+      minWidth: 80,
+      flex: 0.4,
     },
     {
       field: 'FacultyShortName',
       headerName: 'Faculty',
-      width: 120,
+      minWidth: 80,
+      flex: 0.4,
     },
     {
       field: 'SpecializationShortName',
       headerName: 'Specialization',
-      width: 150,
+      minWidth: 120,
+      flex: 0.8,
     },
     {
       field: 'status',
       headerName: 'Status',
-      width: 120,
+      minWidth: 100,
+      flex: 0.5,
       renderCell: () => {
         return (
           <Chip

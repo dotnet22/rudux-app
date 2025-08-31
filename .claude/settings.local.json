@@ -4,7 +4,10 @@
       "Read(D:\\Projects\\new-arch/**)",
       "Bash(npm run lint)",
       "Bash(npm run build:*)",
-      "Bash(npx tsc:*)"
+      "Bash(npx tsc:*)",
+      "Read(d:\\errors/**)",
+      "Read(D:\\errors/**)",
+      "Bash(npm run dev:*)"
     ],
     "deny": [],
     "ask": []

@@ -62,18 +62,20 @@ const ListView = () => {
     {
       field: 'AcademicYearPK',
       headerName: 'ID',
-      width: 300,
+      minWidth: 200,
+      flex: 2,
     },
     {
       field: 'AcademicYear',
       headerName: 'Academic Year',
-      width: 200,
+      minWidth: 150,
       flex: 1,
     },
     {
       field: 'AcademicYearFromDate',
       headerName: 'Start Date',
-      width: 150,
+      minWidth: 120,
+      flex: 1,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
         return new Date(params.value).toLocaleDateString()
       },
@@ -81,7 +83,8 @@ const ListView = () => {
     {
       field: 'AcademicYearToDate',
       headerName: 'End Date',
-      width: 150,
+      minWidth: 120,
+      flex: 1,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
         return new Date(params.value).toLocaleDateString()
       },
@@ -89,7 +92,8 @@ const ListView = () => {
     {
       field: 'status',
       headerName: 'Status',
-      width: 120,
+      minWidth: 100,
+      flex: 1,
       renderCell: () => {
         return (
           <Chip
