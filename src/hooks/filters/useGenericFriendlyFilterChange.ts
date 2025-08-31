@@ -1,5 +1,5 @@
 import { useCallback, useMemo } from 'react'
-import type { FieldValue, FieldValues, UseFormSetValue } from 'react-hook-form'
+import type { FieldValues, UseFormSetValue } from 'react-hook-form'
 import { extractFriendlyFilterPrimitives } from '../../utils/filters'
 import type { CascadingFieldConfig } from '../../utils/form/useCascadingFields'
 
@@ -48,25 +48,25 @@ export const useGenericFriendlyFilterChange = <T extends Record<string, unknown>
   const filterPrimitives = useMemo(() => {
     // Convert filter values to friendly filter format for primitive extraction
     const friendlyFilterLike = {} as Record<keyof T, { Label: string; Value: unknown }>
-    
+
     for (const key in currentFilterValues) {
       friendlyFilterLike[key] = {
         Label: String(currentFilterValues[key] ?? 'All'),
         Value: currentFilterValues[key]
       }
     }
-    
+
     return extractFriendlyFilterPrimitives(friendlyFilterLike)
   }, [currentFilterValues])
 
   // Optimized generic filter change handler
   const handleFriendlyFilterChange = useCallback((fieldKey: keyof T) => {
     const cascadingChildren = getCascadingChildren(fieldKey)
-    
+
     // Build filter updates object with minimal operations
     const filterUpdates: Partial<T> = { [fieldKey]: null } as Partial<T>
     const fieldsToReset: (keyof T)[] = [fieldKey]
-    
+
     // Add cascading children to both update objects
     for (const child of cascadingChildren) {
       filterUpdates[child] = null as T[typeof child]
