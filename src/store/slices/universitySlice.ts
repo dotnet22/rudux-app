@@ -1,4 +1,4 @@
-import { createEntityAdapter, createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import { createEntityAdapter, createSlice, type PayloadAction, type EntityId } from '@reduxjs/toolkit'
 import type { RootState } from '../index'
 import type { University } from '../../types/comboBox'
 
@@ -7,7 +7,8 @@ export interface UniversityState {
   error: string | null
 }
 
-const universityAdapter = createEntityAdapter<University>({
+const universityAdapter = createEntityAdapter<University, EntityId>({
+  selectId: (university: University) => university.Value,
   sortComparer: (a: University, b: University) => a.Value.localeCompare(b.Value),
 })
 

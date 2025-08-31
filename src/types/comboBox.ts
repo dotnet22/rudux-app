@@ -6,8 +6,11 @@ export interface ComboBoxItem {
 
 export type ComboBoxResponse = ComboBoxItem[]
 
-export interface University extends ComboBoxItem {}
+export interface University {
+  Value: string
+  Label: string
+}
 
-export interface Faculty extends ComboBoxItem {}
+export type Faculty = ComboBoxItem
 
-export interface Course extends ComboBoxItem {}
+export type Course = ComboBoxItem

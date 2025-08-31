@@ -1,5 +1,5 @@
 import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react'
-import type { ComboBoxResponse } from '../../types/comboBox'
+import type { University } from '../../types/comboBox'
 
 export const universityApi = createApi({
   reducerPath: 'universityApi',
@@ -13,13 +13,11 @@ export const universityApi = createApi({
   }),
   tagTypes: ['University'],
   endpoints: (builder) => ({
-    getUniversities: builder.query<ComboBoxResponse, void>({
+    getUniversities: builder.query<University[], void>({
       query: () => ({
         url: '/INS_University/comboBox',
         method: 'GET',
       }),
-      transformResponse: (response: { Value: string; Label: string }[]) => 
-        response.map(item => ({ ...item, id: item.Value })),
       providesTags: ['University'],
     }),
   }),
