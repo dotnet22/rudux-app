@@ -1,3 +1,4 @@
+import type React from 'react'
 import {
   DataGrid,
   type GridColDef,
@@ -6,16 +7,23 @@ import { Box, Chip, Paper, Typography } from '@mui/material'
 import { useProgramsList } from '../hooks/useProgramsList'
 
 // Slots interfaces
-interface ProgramsListViewSlots {
+interface ProgramsListSlots {
   filter: React.ElementType
   filterDisplay: React.ElementType
 }
 
-interface ProgramsListViewProps {
-  slots?: Partial<ProgramsListViewSlots>
+// SlotProps interfaces
+interface ProgramsListSlotProps {
+  filter?: Record<string, unknown>
+  filterDisplay?: Record<string, unknown>
 }
 
-const ProgramsListView = ({ slots }: ProgramsListViewProps) => {
+interface ProgramsListProps {
+  slots?: Partial<ProgramsListSlots>
+  slotProps?: ProgramsListSlotProps
+}
+
+const ProgramsListView = ({ slots, slotProps }: ProgramsListProps) => {
   const {
     programs,
     currentPage,
@@ -105,10 +113,10 @@ const ProgramsListView = ({ slots }: ProgramsListViewProps) => {
   return (
     <>
       {/* Render Filter Component */}
-      {FilterSlot && <FilterSlot />}
+      {FilterSlot && <FilterSlot {...(slotProps?.filter || {})} />}
       
       {/* Render Filter Display Component */}
-      {FilterDisplaySlot && <FilterDisplaySlot />}
+      {FilterDisplaySlot && <FilterDisplaySlot {...(slotProps?.filterDisplay || {})} />}
       
       {/* Data Grid */}
       <Paper sx={{ p: 2, mt: 2 }}>
@@ -151,8 +159,9 @@ const ProgramsListView = ({ slots }: ProgramsListViewProps) => {
 }
 
 ProgramsListView.defaultProps = {
-  slots: {}
+  slots: {},
+  slotProps: {}
 }
 
 export default ProgramsListView
-export type { ProgramsListViewProps }
+export type { ProgramsListProps as ProgramsListViewProps, ProgramsListSlotProps as ProgramsListViewSlotProps }

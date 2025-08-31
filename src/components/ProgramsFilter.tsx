@@ -7,9 +7,32 @@ import {
   TextField,
   CircularProgress,
 } from '@mui/material'
-import { useProgramsFilter, type ProgramFilterFormData } from '../hooks/useProgramsFilter'
+import type { Control, UseFormHandleSubmit, ControllerRenderProps, FieldError } from 'react-hook-form'
+import { Controller } from 'react-hook-form'
+import type { ProgramFilterFormData } from '../hooks/useProgramsFilter'
+import type { ProgramFilterModel } from '../types/program'
 
-const ProgramsFilter = () => {
+interface DropdownOption {
+  Value: string
+  Label: string
+}
+
+interface ProgramsFilterProps {
+  control: Control<ProgramFilterFormData>
+  handleSubmit: UseFormHandleSubmit<ProgramFilterFormData>
+  handleClear: () => void
+  universities: DropdownOption[]
+  faculties: DropdownOption[]
+  courses: DropdownOption[]
+  isLoadingUniversities: boolean
+  isLoadingFaculties: boolean
+  isLoadingCourses: boolean
+  UniversityPK: string | null | undefined
+  FacultyPK: string | null | undefined
+  onFilterChange: (filters: ProgramFilterModel) => void
+}
+
+const ProgramsFilter = (props: ProgramsFilterProps) => {
   const {
     control,
     handleSubmit,
@@ -20,11 +43,10 @@ const ProgramsFilter = () => {
     isLoadingUniversities,
     isLoadingFaculties,
     isLoadingCourses,
-    Controller,
     UniversityPK,
     FacultyPK,
     onFilterChange,
-  } = useProgramsFilter()
+  } = props
 
   const onSubmit = (data: ProgramFilterFormData) => {
     onFilterChange({
@@ -47,14 +69,14 @@ const ProgramsFilter = () => {
           <Controller
             name="UniversityPK"
             control={control}
-            render={({ field, fieldState }) => (
+            render={({ field, fieldState }: { field: ControllerRenderProps<ProgramFilterFormData, 'UniversityPK'>, fieldState: { error?: FieldError } }) => (
               <Autocomplete
                 {...field}
                 options={universities}
-                getOptionLabel={(option) => option.Label}
-                getOptionKey={(option) => option.Value}
+                getOptionLabel={(option: DropdownOption) => option.Label}
+                getOptionKey={(option: DropdownOption) => option.Value}
                 value={universities.find(u => u.Value === field.value) || null}
-                onChange={(_, value) => field.onChange(value?.Value || null)}
+                onChange={(_, value: DropdownOption | null) => field.onChange(value?.Value || null)}
                 loading={isLoadingUniversities}
                 sx={{ flex: '1 1 300px', minWidth: 300 }}
                 renderInput={(params) => (
@@ -81,14 +103,14 @@ const ProgramsFilter = () => {
           <Controller
             name="FacultyPK"
             control={control}
-            render={({ field, fieldState }) => (
+            render={({ field, fieldState }: { field: ControllerRenderProps<ProgramFilterFormData, 'FacultyPK'>, fieldState: { error?: FieldError } }) => (
               <Autocomplete
                 {...field}
                 options={faculties}
-                getOptionLabel={(option) => option.Label}
-                getOptionKey={(option) => option.Value}
+                getOptionLabel={(option: DropdownOption) => option.Label}
+                getOptionKey={(option: DropdownOption) => option.Value}
                 value={faculties.find(f => f.Value === field.value) || null}
-                onChange={(_, value) => field.onChange(value?.Value || null)}
+                onChange={(_, value: DropdownOption | null) => field.onChange(value?.Value || null)}
                 loading={isLoadingFaculties}
                 disabled={!UniversityPK}
                 sx={{ flex: '1 1 300px', minWidth: 300 }}
@@ -116,14 +138,14 @@ const ProgramsFilter = () => {
           <Controller
             name="CoursePK"
             control={control}
-            render={({ field, fieldState }) => (
+            render={({ field, fieldState }: { field: ControllerRenderProps<ProgramFilterFormData, 'CoursePK'>, fieldState: { error?: FieldError } }) => (
               <Autocomplete
                 {...field}
                 options={courses}
-                getOptionLabel={(option) => option.Label}
-                getOptionKey={(option) => option.Value}
+                getOptionLabel={(option: DropdownOption) => option.Label}
+                getOptionKey={(option: DropdownOption) => option.Value}
                 value={courses.find(c => c.Value === field.value) || null}
-                onChange={(_, value) => field.onChange(value?.Value || null)}
+                onChange={(_, value: DropdownOption | null) => field.onChange(value?.Value || null)}
                 loading={isLoadingCourses}
                 disabled={!FacultyPK}
                 sx={{ flex: '1 1 300px', minWidth: 300 }}
@@ -163,3 +185,4 @@ const ProgramsFilter = () => {
 }
 
 export default ProgramsFilter
+export type { ProgramsFilterProps }

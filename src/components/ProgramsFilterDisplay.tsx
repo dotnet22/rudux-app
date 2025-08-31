@@ -1,9 +1,12 @@
 import { Card, CardContent, Typography, Chip, Box } from '@mui/material'
 import { memo } from 'react'
-import { useProgramsFilterDisplay } from '../hooks/useProgramsFilterDisplay'
 
-export const ProgramsFilterDisplay = memo(() => {
-  const { friendlyFilter } = useProgramsFilterDisplay()
+interface ProgramsFilterDisplayProps {
+  friendlyFilter: Record<string, { Label: string; Value: unknown }>
+}
+
+export const ProgramsFilterDisplay = memo((props: ProgramsFilterDisplayProps) => {
+  const { friendlyFilter } = props
 
   return (
     <Card sx={{ mb: 2 }}>
@@ -30,3 +33,5 @@ export const ProgramsFilterDisplay = memo(() => {
 })
 
 ProgramsFilterDisplay.displayName = 'ProgramsFilterDisplay'
+
+export type { ProgramsFilterDisplayProps }
