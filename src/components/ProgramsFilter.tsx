@@ -87,13 +87,13 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
             )}
           />
           <Controller
-            name="CoursePK"
+            name="FacultyPK"
             control={control}
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Course ID"
-                placeholder="Enter Course Primary Key"
+                label="Faculty ID"
+                placeholder="Enter Faculty Primary Key"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 value={field.value || ''}
@@ -103,13 +103,13 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
             )}
           />
           <Controller
-            name="FacultyPK"
+            name="CoursePK"
             control={control}
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Faculty ID"
-                placeholder="Enter Faculty Primary Key"
+                label="Course ID"
+                placeholder="Enter Course Primary Key"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 value={field.value || ''}
