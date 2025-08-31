@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useForm, Controller } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -73,39 +73,47 @@ export const useProgramsFilter = () => {
     dispatch(setFilters(newFilters))
   }, [dispatch])
 
+  // Static cascading configuration - constant reference for optimal performance
+  const cascadingMap = useMemo(() => new Map<keyof ProgramFilterModel, (keyof ProgramFilterModel)[]>([
+    ['UniversityPK', ['FacultyPK', 'CoursePK']],
+    ['FacultyPK', ['CoursePK']]
+  ]), [])
+
+  // Optimized method to find cascading children - uses Map for O(1) lookup
+  const getCascadingChildren = useCallback((fieldKey: keyof ProgramFilterModel): readonly (keyof ProgramFilterModel)[] => {
+    return cascadingMap.get(fieldKey) || []
+  }, [cascadingMap])
+
+  // Optimized filter change handler with minimal object creation and batched form updates
   const handleFriendlyFilterChange = useCallback((fieldKey: keyof ProgramFilterModel) => {
-    const currentFilters = {
-      UniversityPK: UniversityPK || null,
-      FacultyPK: FacultyPK || null,
-      CoursePK: CoursePK || null,
-      IsActive: null,
-      SearchTerm: null,
-      CreatedAfter: null,
+    const cascadingChildren = getCascadingChildren(fieldKey)
+    
+    // Build filter updates object with minimal operations
+    const filterUpdates: Partial<ProgramFilterModel> = { [fieldKey]: null }
+    const fieldsToReset: (keyof ProgramFilterModel)[] = [fieldKey]
+    
+    // Add cascading children to both update objects
+    for (const child of cascadingChildren) {
+      filterUpdates[child] = null
+      fieldsToReset.push(child)
     }
 
-    // Clear the specific field
-    const updatedFilters = { ...currentFilters, [fieldKey]: null }
-
-    // Handle cascading resets for dependent fields
-    if (fieldKey === 'UniversityPK') {
-      updatedFilters.FacultyPK = null
-      updatedFilters.CoursePK = null
-    } else if (fieldKey === 'FacultyPK') {
-      updatedFilters.CoursePK = null
+    // Build complete filter state only once
+    const updatedFilters: ProgramFilterModel = {
+      UniversityPK: filterUpdates.UniversityPK ?? (UniversityPK || null),
+      FacultyPK: filterUpdates.FacultyPK ?? (FacultyPK || null),
+      CoursePK: filterUpdates.CoursePK ?? (CoursePK || null),
+      IsActive: filterUpdates.IsActive ?? null,
+      SearchTerm: filterUpdates.SearchTerm ?? null,
+      CreatedAfter: filterUpdates.CreatedAfter ?? null,
     }
 
-    // Update form state
-    setValue(fieldKey, null)
-    if (fieldKey === 'UniversityPK') {
-      setValue('FacultyPK', null)
-      setValue('CoursePK', null)
-    } else if (fieldKey === 'FacultyPK') {
-      setValue('CoursePK', null)
-    }
+    // Batch form state updates to minimize rerenders
+    fieldsToReset.forEach(field => setValue(field, null))
 
-    // Update Redux state
+    // Single Redux state update
     handleFilterChange(updatedFilters)
-  }, [UniversityPK, FacultyPK, CoursePK, setValue, handleFilterChange])
+  }, [getCascadingChildren, UniversityPK, FacultyPK, CoursePK, setValue, handleFilterChange])
 
   const handleClear = useCallback(() => {
     const clearedFilters = { UniversityPK: null, CoursePK: null, FacultyPK: null, IsActive: null, SearchTerm: null, CreatedAfter: null }
