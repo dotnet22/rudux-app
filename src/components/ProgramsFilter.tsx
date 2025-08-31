@@ -14,7 +14,7 @@ import type { ProgramFilterModel } from '../types/program'
 const programFilterSchema = z.object({
   UniversityPK: z.string().optional().nullable(),
   CoursePK: z.string().optional().nullable(),
-  SpecializationPK: z.string().optional().nullable(),
+  FacultyPK: z.string().optional().nullable(),
 })
 
 export type ProgramFilterFormData = z.infer<typeof programFilterSchema>
@@ -35,7 +35,7 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
     defaultValues: {
       UniversityPK: initialFilters?.UniversityPK || null,
       CoursePK: initialFilters?.CoursePK || null,
-      SpecializationPK: initialFilters?.SpecializationPK || null,
+      FacultyPK: initialFilters?.FacultyPK || null,
     },
   })
 
@@ -43,7 +43,7 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
     onFilterChange({
       UniversityPK: data.UniversityPK || null,
       CoursePK: data.CoursePK || null,
-      SpecializationPK: data.SpecializationPK || null,
+      FacultyPK: data.FacultyPK || null,
     })
   }, [onFilterChange])
 
@@ -51,7 +51,7 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
     const clearedFilters = {
       UniversityPK: null,
       CoursePK: null,
-      SpecializationPK: null,
+      FacultyPK: null,
     }
     reset(clearedFilters)
     onFilterChange(clearedFilters)
@@ -103,13 +103,13 @@ const ProgramsFilter = ({ onFilterChange, initialFilters }: ProgramsFilterProps)
             )}
           />
           <Controller
-            name="SpecializationPK"
+            name="FacultyPK"
             control={control}
             render={({ field, fieldState }) => (
               <TextField
                 {...field}
-                label="Specialization ID"
-                placeholder="Enter Specialization Primary Key"
+                label="Faculty ID"
+                placeholder="Enter Faculty Primary Key"
                 error={!!fieldState.error}
                 helperText={fieldState.error?.message}
                 value={field.value || ''}
