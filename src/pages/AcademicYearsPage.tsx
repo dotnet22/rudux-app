@@ -1,5 +1,5 @@
 import { Container, Typography } from '@mui/material'
-import ListView from '../components/ListView'
+import ListView from '../components/AcademicYearsListView'
 
 const AcademicYearsPage = () => {
   return (

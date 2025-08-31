@@ -54,6 +54,7 @@ const ListView = () => {
     if (data) {
       const mappedData = data.Data.map((item: AcademicYear) => ({ ...item, id: item.AcademicYearPK }))
       dispatch(setAcademicYears({ data: mappedData, totalRecords: data.Total }))
+      dispatch(setLoading(false))
     }
   }, [dispatch, data])
 
@@ -103,9 +104,11 @@ const ListView = () => {
 
   const handlePaginationModelChange = (model: GridPaginationModel) => {
     if (model.page !== currentPage) {
+      dispatch(setLoading(true))
       dispatch(setPage(model.page))
     }
     if (model.pageSize !== pageSize) {
+      dispatch(setLoading(true))
       dispatch(setPageSize(model.pageSize))
     }
   }
@@ -113,8 +116,10 @@ const ListView = () => {
   const handleSortModelChange = (model: GridSortModel) => {
     if (model.length > 0) {
       const sort = model[0]
+      dispatch(setLoading(true))
       dispatch(setSorting({ field: sort.field, order: sort.sort as 'asc' | 'desc' | null }))
     } else {
+      dispatch(setLoading(true))
       dispatch(setSorting({ field: null, order: null }))
     }
   }
@@ -142,9 +147,15 @@ const ListView = () => {
           onPaginationModelChange={handlePaginationModelChange}
           onSortModelChange={handleSortModelChange}
           rowCount={totalRecords}
-          loading={isLoading}
+          loading={loading}
           pageSizeOptions={[10, 20, 50, 100]}
           disableRowSelectionOnClick
+          slotProps={{
+            loadingOverlay: {
+              variant: 'skeleton',
+              noRowsVariant: 'skeleton',
+            },
+          }}
           sx={{
             '& .MuiDataGrid-cell': {
               borderBottom: '1px solid #e0e0e0',
