@@ -4,6 +4,7 @@ import ProgramsListView from '../components/ProgramsListView'
 import ProgramsFilter from '../components/ProgramsFilter'
 import { setFilters, selectProgramsState } from '../store/slices/programsSlice'
 import type { ProgramFilterModel } from '../types/program'
+import { ProgramsFilterDisplay } from '../components/ProgramsFilterDisplay'
 
 const ProgramsPage = () => {
   const dispatch = useDispatch()
@@ -22,6 +23,7 @@ const ProgramsPage = () => {
         onFilterChange={handleFilterChange}
         initialFilters={filters}
       />
+      <ProgramsFilterDisplay/>
       <ProgramsListView />
     </Container>
   )

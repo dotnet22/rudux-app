@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect, useCallback, useRef } from 'react'
 import { useForm, Controller, type Control } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
@@ -38,17 +38,16 @@ export interface UseProgramsFilterReturn {
   Controller: typeof Controller
 }
 
-export const useProgramsFilter = ({ 
-  onFilterChange, 
-  initialFilters 
+export const useProgramsFilter = ({
+  onFilterChange,
+  initialFilters
 }: UseProgramsFilterProps): UseProgramsFilterReturn => {
   const dispatch = useDispatch()
-  
+
   const {
     control,
     handleSubmit,
     reset,
-    watch,
     setValue,
   } = useForm<ProgramFilterFormData>({
     resolver: zodResolver(programFilterSchema),
@@ -64,28 +63,28 @@ export const useProgramsFilter = ({
   const { UniversityPK, FacultyPK } = watchedFields
 
   // API queries
-  const { 
-    data: universities = [], 
-    isLoading: isLoadingUniversities 
+  const {
+    data: universities = [],
+    isLoading: isLoadingUniversities
   } = useGetUniversitiesQuery()
 
-  const { 
-    data: faculties = [], 
-    isLoading: isLoadingFaculties 
+  const {
+    data: faculties = [],
+    isLoading: isLoadingFaculties
   } = useGetFacultiesQuery(UniversityPK!, {
     skip: !UniversityPK
   })
 
-  const { 
-    data: courses = [], 
-    isLoading: isLoadingCourses 
+  const {
+    data: courses = [],
+    isLoading: isLoadingCourses
   } = useGetCoursesQuery(FacultyPK!, {
     skip: !FacultyPK
   })
 
   // Get current filter values for friendly filter resolution
   const currentFilters = useWatchBatch(control, ["UniversityPK", "FacultyPK", "CoursePK"] as const)
-  
+
   // Resolve friendly filter values
   const friendlyFilter = useFriendlyFilterResolver({
     filterModel: {
@@ -99,33 +98,44 @@ export const useProgramsFilter = ({
   })
 
   // Update friendly filters in Redux when they change
+  // Using JSON stringify for deep comparison to prevent unnecessary updates
+  const friendlyFilterString = JSON.stringify(friendlyFilter)
   useEffect(() => {
     dispatch(setFriendlyFilters(friendlyFilter))
-  }, [dispatch, friendlyFilter])
+  }, [dispatch, friendlyFilterString])
 
-  // Handle cascading resets
+  // Handle cascading resets with refs to avoid infinite loops
+  const previousUniversityRef = useRef(UniversityPK)
+  const previousFacultyRef = useRef(FacultyPK)
+
   useEffect(() => {
     // Reset faculty when university changes
-    if (UniversityPK) {
-      setValue('FacultyPK', null)
-      setValue('CoursePK', null)
+    if (previousUniversityRef.current !== UniversityPK) {
+      if (previousUniversityRef.current !== undefined) {
+        setValue('FacultyPK', null)
+        setValue('CoursePK', null)
+      }
+      previousUniversityRef.current = UniversityPK
     }
   }, [UniversityPK, setValue])
 
   useEffect(() => {
     // Reset course when faculty changes
-    if (FacultyPK) {
-      setValue('CoursePK', null)
+    if (previousFacultyRef.current !== FacultyPK) {
+      if (previousFacultyRef.current !== undefined) {
+        setValue('CoursePK', null)
+      }
+      previousFacultyRef.current = FacultyPK
     }
   }, [FacultyPK, setValue])
 
-  const onSubmit = useCallback((data: ProgramFilterFormData) => {
-    onFilterChange({
-      UniversityPK: data.UniversityPK || null,
-      CoursePK: data.CoursePK || null,
-      FacultyPK: data.FacultyPK || null,
-    })
-  }, [onFilterChange])
+  // const onSubmit = useCallback((data: ProgramFilterFormData) => {
+  //   onFilterChange({
+  //     UniversityPK: data.UniversityPK || null,
+  //     CoursePK: data.CoursePK || null,
+  //     FacultyPK: data.FacultyPK || null,
+  //   })
+  // }, [onFilterChange])
 
   const handleClear = useCallback(() => {
     const clearedFilters = {
@@ -137,11 +147,13 @@ export const useProgramsFilter = ({
     onFilterChange(clearedFilters)
   }, [reset, onFilterChange])
 
+  // Remove auto-submit to prevent infinite loops
+  // Auto-submit functionality is handled by explicit form submission
   // Auto-submit on changes
-  useEffect(() => {
-    const subscription = watch(() => handleSubmit(onSubmit)())
-    return () => subscription.unsubscribe()
-  }, [handleSubmit, watch, onSubmit])
+  // useEffect(() => {
+  //   const subscription = watch(() => handleSubmit(onSubmit)())
+  //   return () => subscription.unsubscribe()
+  // }, [handleSubmit, watch, onSubmit])
 
   return {
     control,
