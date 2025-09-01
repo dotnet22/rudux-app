@@ -44,15 +44,8 @@ export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearF
   const onSubmit = async (data: AcademicYearFormData) => {
     try {
       const academicYearData: AcademicYear = {
+        ...data,
         AcademicYearPK: data.AcademicYearPK || '',
-        AcademicYearName: data.AcademicYearName,
-        AcademicYear: data.AcademicYear,
-        AcademicYearFromDate: data.AcademicYearFromDate,
-        AcademicYearToDate: data.AcademicYearToDate,
-        FinancialYearFromDate: data.FinancialYearFromDate,
-        FinancialYearToDate: data.FinancialYearToDate,
-        CalendarYearFromDate: data.CalendarYearFromDate,
-        CalendarYearToDate: data.CalendarYearToDate,
         Description: data.Description || null,
       }
 
