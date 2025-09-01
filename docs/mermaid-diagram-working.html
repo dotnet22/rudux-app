@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Generic Friendly Filter Change System - Architecture Flow</title>
+  <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; line-height: 1.6; }
+    .mermaid { border: 1px solid #ccc; border-radius: 8px; padding: 20px; background: #fafafa; margin: 20px 0; }
+    h1, h2 { color: #333; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+    .success { background: #d4edda; border: 1px solid #c3e6cb; color: #155724; }
+    .error { background: #f8d7da; border: 1px solid #f5c6cb; color: #721c24; }
+  </style>
+</head>
+<body>
+<h1>Generic Friendly Filter Change System</h1>
+<h2>Architecture Flow Diagram</h2>
+
+<div class="mermaid">
+graph TB
+    %% Main Components
+    subgraph "Component Layer"
+        A[Component with Filters]
+        A -->|uses| B[useGenericFriendlyFilterChange]
+        A -->|provides config| C[GenericFriendlyFilterChangeConfig]
+    end
+
+    %% Configuration Structure
+    subgraph "Configuration"
+        C -->|contains| D["currentFilterValues: T"]
+        C -->|contains| E["setValue: UseFormSetValue&lt;T&gt;"]
+        C -->|contains| F["onFilterChange: Function"]
+        C -->|contains| G["cascadingConfig?: CascadingFieldConfig[]"]
+    end
+
+    %% Hook Internal Structure
+    subgraph "Hook Internals"
+        B -->|creates| H["cascadingMap: Map&lt;keyof T, keyof T[]&gt;"]
+        B -->|extracts| I["filterPrimitives: Primitive[]"]
+        B -->|creates| J["getCascadingChildren: Function"]
+        B -->|returns| K["handleFriendlyFilterChange: Function"]
+    end
+
+    %% Performance Optimizations
+    subgraph "Performance Layer"
+        H -->|useMemo| L["O(1) Field Lookups"]
+        I -->|uses| M[extractFriendlyFilterPrimitives]
+        M -->|from| N["core/filters/primitive-extraction.ts"]
+        I -->|enables| O["Optimal Memoization"]
+    end
+
+    %% Cascading System
+    subgraph "Cascading Fields System"
+        G -->|defines| P["Parent-Child Relationships"]
+        P -->|parent field| Q[UniversityPK]
+        P -->|children| R["FacultyPK, CoursePK"]
+        Q -->|changes| S["Reset Children Fields"]
+    end
+
+    %% Filter Change Flow
+    subgraph "Change Handling Flow"
+        K -->|triggered by| T["User Filter Action"]
+        T -->|step 1| U["Get Cascading Children"]
+        U -->|step 2| V["Build Filter Updates Object"]
+        V -->|step 3| W["Build Complete Filter State"]
+        W -->|step 4| X["Batch Form Updates"]
+        X -->|step 5| Y["Single State Update"]
+    end
+
+    %% Data Transformation
+    subgraph "Data Transformation"
+        D -->|converts to| Z["Friendly Filter Format"]
+        Z -->|structure| AA["{field: {Label: string, Value: primitive}}"]
+        AA -->|extracts| AB["Primitive Values Array"]
+        AB -->|for| AC["Dependency Array Optimization"]
+    end
+
+    %% Error Handling & Validation
+    subgraph "Type Safety"
+        AD["Generic Type T extends Record&lt;string, unknown&gt;"]
+        AD -->|ensures| AE["Type-Safe Field Operations"]
+        AE -->|validates| AF["Filter State Consistency"]
+    end
+
+    %% Simplified Hook
+    subgraph "Alternative Usage"
+        AG[useSimpleFriendlyFilterChange]
+        AG -->|wraps| B
+        AG -->|with| AH["Empty Cascading Config"]
+    end
+
+    %% Performance Benefits
+    subgraph "Performance Benefits"
+        L -->|reduces| AI["Lookup Complexity"]
+        O -->|minimizes| AJ["React Re-renders"]
+        AC -->|optimizes| AK["Memoization Dependencies"]
+        X -->|batches| AL["DOM Updates"]
+    end
+
+    %% Styling
+    classDef componentClass fill:#e1f5fe,stroke:#0277bd,stroke-width:2px
+    classDef configClass fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef hookClass fill:#e8f5e8,stroke:#2e7d32,stroke-width:2px
+    classDef performanceClass fill:#fff3e0,stroke:#ef6c00,stroke-width:2px
+    classDef flowClass fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+
+    class A,B,AG componentClass
+    class C,D,E,F,G configClass
+    class H,I,J,K hookClass
+    class L,M,N,O,AC,AI,AJ,AK,AL performanceClass
+    class T,U,V,W,X,Y flowClass
+</div>
+
+<div id="status" class="status">Loading diagram...</div>
+
+<h2>System Overview</h2>
+<p>The Generic Friendly Filter Change system provides an optimized way to handle filter state changes with cascading field dependencies and performance optimizations.</p>
+
+<h3>Key Components</h3>
+<ul>
+  <li><strong>GenericFriendlyFilterChangeConfig</strong>: Configuration object for filter change handling</li>
+  <li><strong>useGenericFriendlyFilterChange Hook</strong>: Main hook with memoized cascading map and primitive extraction</li>
+  <li><strong>Cascading Fields System</strong>: Automatic dependent field resets (University → Faculty → Course)</li>
+  <li><strong>Performance Optimizations</strong>: Primitive extraction, memoization, and batch updates</li>
+  <li><strong>Type Safety</strong>: Generic constraints with compile-time validation</li>
+</ul>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const statusDiv = document.getElementById('status');
+    
+    try {
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'default',
+            securityLevel: 'loose',
+            maxTextSize: 50000,
+            htmlLabels: true,
+            flowchart: {
+                useMaxWidth: true,
+                htmlLabels: true
+            }
+        });
+        
+        // Check rendering status
+        setTimeout(() => {
+            const svg = document.querySelector('.mermaid svg');
+            if (svg) {
+                statusDiv.innerHTML = '✅ Diagram rendered successfully!';
+                statusDiv.className = 'status success';
+            } else {
+                statusDiv.innerHTML = '❌ Diagram failed to render. The Mermaid syntax may have issues with angle brackets or complex expressions.';
+                statusDiv.className = 'status error';
+            }
+        }, 3000);
+        
+    } catch (error) {
+        statusDiv.innerHTML = '❌ Error initializing Mermaid: ' + error.message;
+        statusDiv.className = 'status error';
+    }
+});
+</script>
+</body>
+</html>

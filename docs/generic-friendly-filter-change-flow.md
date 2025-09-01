@@ -20,14 +20,14 @@ graph TB
     %% Configuration Structure
     subgraph "Configuration"
         C -->|contains| D[currentFilterValues: T]
-        C -->|contains| E[setValue: UseFormSetValue&lt;T&gt;]
+        C -->|contains| E["setValue: UseFormSetValue&lt;T&gt;"]
         C -->|contains| F[onFilterChange: Function]
         C -->|contains| G[cascadingConfig?: CascadingFieldConfig[]]
     end
 
     %% Hook Internal Structure
     subgraph "Hook Internals"
-        B -->|creates| H[cascadingMap: Map&lt;keyof T, keyof T[]&gt;]
+        B -->|creates| H["cascadingMap: Map&lt;keyof T, keyof T[]&gt;"]
         B -->|extracts| I[filterPrimitives: Primitive[]]
         B -->|creates| J[getCascadingChildren: Function]
         B -->|returns| K[handleFriendlyFilterChange: Function]
@@ -69,7 +69,7 @@ graph TB
 
     %% Error Handling & Validation
     subgraph "Type Safety"
-        AD[Generic Type T extends Record&lt;string, unknown&gt;]
+        AD["Generic Type T extends Record&lt;string, unknown&gt;"]
         AD -->|ensures| AE[Type-Safe Field Operations]
         AE -->|validates| AF[Filter State Consistency]
     end
