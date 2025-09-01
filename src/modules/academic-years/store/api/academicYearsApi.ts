@@ -17,6 +17,13 @@ export const academicYearsApi = createApi({
       // transformResponse: noTransform,
       providesTags: ['AcademicYear'],
     }),
+    getAcademicYearById: builder.query<AcademicYear, string>({
+      query: (id) => ({
+        url: `/MST_AcademicYear/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (_, __, id) => [{ type: 'AcademicYear', id }],
+    }),
     updateAcademicYear: builder.mutation<OperationResponse, AcademicYear>({
       query: (body) => ({
         url: '/MST_AcademicYear/update',
@@ -28,4 +35,4 @@ export const academicYearsApi = createApi({
   }),
 })
 
-export const { useGetAcademicYearsQuery, useUpdateAcademicYearMutation } = academicYearsApi
+export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useUpdateAcademicYearMutation } = academicYearsApi
