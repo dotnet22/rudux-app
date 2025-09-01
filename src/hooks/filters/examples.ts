@@ -7,12 +7,12 @@
 
 import type { ProgramFilterModel } from '../../modules/programs/types/program'
 import type { FilterModel } from '../../modules/academic-years/types/academicYear'
-import type { ComboBoxItem, University } from '../../types/comboBox'
+import type { ComboBoxItem, University } from '../../core/types/combo-box'
 import { 
   useGenericFriendlyFilterResolver,
   useAutoFriendlyFilterResolver
 } from './index'
-import { extractFriendlyFilterPrimitives } from '../../utils/filters/primitiveExtraction'
+import { extractFriendlyFilterPrimitives } from '../../core/filters/primitive-extraction'
 
 // ============================================================================
 // Example 1: Basic Usage with ProgramFilterModel

@@ -1,6 +1,6 @@
 import { createEntityAdapter, createSlice, type PayloadAction } from '@reduxjs/toolkit'
 import type { RootState } from '../index'
-import type { Faculty } from '../../types/comboBox'
+import type { Faculty } from '../../core/types/combo-box'
 
 export interface FacultyState {
   loading: boolean

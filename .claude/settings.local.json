@@ -14,7 +14,19 @@
       "Bash(npm run lint:*)",
       "Bash(git add:*)",
       "Bash(git commit:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "WebFetch(domain:localhost)",
+      "WebFetch(domain:[::1])",
+      "Bash(npm run test:*)",
+      "mcp__playwright__browser_navigate",
+      "mcp__playwright__browser_snapshot",
+      "mcp__playwright__browser_console_messages",
+      "mcp__playwright__browser_network_requests",
+      "mcp__playwright__browser_wait_for",
+      "Read(d:\\errors/**)",
+      "mcp__playwright__browser_evaluate",
+      "mcp__playwright__browser_click",
+      "Read(d:\\errors/**)"
     ],
     "deny": [],
     "ask": []

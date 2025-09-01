@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { baseQuery } from '../../../../store/api/baseQuery'
-import { noTransform } from '../../../../store/api/transforms'
+import { noTransform } from '../../../../core/api/transforms'
 import type { ProgramListRequest, ProgramListResponse } from '../../types/program'
 
 export const programsApi = createApi({

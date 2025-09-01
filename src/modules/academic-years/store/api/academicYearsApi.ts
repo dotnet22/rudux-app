@@ -1,6 +1,5 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { baseQuery } from '../../../../store/api/baseQuery'
-import { noTransform } from '../../../../store/api/transforms'
 import type { AcademicYearListRequest, AcademicYearListResponse } from '../../types/academicYear'
 
 export const academicYearsApi = createApi({
@@ -14,7 +13,8 @@ export const academicYearsApi = createApi({
         method: 'POST',
         body,
       }),
-      transformResponse: noTransform,
+      // Remove transform since API doesn't follow expected wrapper format
+      // transformResponse: noTransform,
       providesTags: ['AcademicYear'],
     }),
   }),

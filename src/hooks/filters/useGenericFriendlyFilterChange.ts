@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react'
 import type { FieldValues, UseFormSetValue } from 'react-hook-form'
-import { extractFriendlyFilterPrimitives } from '../../utils/filters'
+import { extractFriendlyFilterPrimitives } from '../../core/filters'
 import type { CascadingFieldConfig } from '../../utils/form/useCascadingFields'
 
 /**

@@ -1,7 +1,7 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { baseQuery } from './baseQuery'
-import { transformToComboBox } from './transforms'
-import type { ComboBoxResponse } from '../../types/comboBox'
+import { transformToComboBox } from '../../core/api/transforms'
+import type { ComboBoxResponse } from '../../core/types/combo-box'
 
 export const courseApi = createApi({
   reducerPath: 'courseApi',

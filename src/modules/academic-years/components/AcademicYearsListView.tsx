@@ -7,7 +7,7 @@ import {
   type GridSortModel,
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
-import { Box, Chip, Paper, Typography } from '@mui/material'
+import { Box, Chip, Paper, Typography, Alert, Button } from '@mui/material'
 import { useGetAcademicYearsQuery } from '../store/api/academicYearsApi'
 import {
   selectAllAcademicYears,
@@ -18,12 +18,14 @@ import {
   setAcademicYears,
   setLoading,
 } from '../store/slices/academicYearsSlice'
+import { useApiError } from '../../../store/api/errorHandling'
 import type { AcademicYear } from '../types/academicYear'
 
 const ListView = () => {
   const dispatch = useDispatch()
   const academicYears = useSelector(selectAllAcademicYears)
   const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading } = useSelector(selectAcademicYearsState)
+  const { processError } = useApiError()
 
   const requestPayload = {
     pageOffset: currentPage,
@@ -44,7 +46,7 @@ const ListView = () => {
     SpecializationPK: "u725SYy6D5tncoEbPIOpHw"
   }
 
-  const { data, error, isLoading } = useGetAcademicYearsQuery(requestPayload)
+  const { data, error, isLoading, refetch } = useGetAcademicYearsQuery(requestPayload)
 
   useEffect(() => {
     dispatch(setLoading(isLoading))
@@ -129,9 +131,35 @@ const ListView = () => {
   }
 
   if (error) {
+    const processedError = processError(error)
     return (
       <Paper sx={{ p: 3, mt: 2 }}>
-        <Typography color="error">Error loading academic years data</Typography>
+        <Alert 
+          severity="error" 
+          action={
+            <Button color="inherit" size="small" onClick={() => refetch()}>
+              Retry
+            </Button>
+          }
+          sx={{ mb: 2 }}
+        >
+          <Typography variant="h6" gutterBottom>
+            {processedError.title || 'Error loading academic years data'}
+          </Typography>
+          {processedError.status && (
+            <Typography variant="body2" color="text.secondary">
+              Status Code: {processedError.status}
+            </Typography>
+          )}
+          {processedError.traceId && (
+            <Typography variant="body2" color="text.secondary">
+              Trace ID: {processedError.traceId}
+            </Typography>
+          )}
+          <Typography variant="body2" sx={{ mt: 1 }}>
+            Please check your network connection and try again. If the problem persists, contact support.
+          </Typography>
+        </Alert>
       </Paper>
     )
   }

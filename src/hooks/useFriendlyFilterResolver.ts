@@ -1,13 +1,13 @@
 import { useMemo } from 'react'
 import type { ProgramFilterModel, FriendlyFilterRecord } from '../modules/programs/types/program'
-import type { ComboBoxItem, University } from '../types/comboBox'
+import type { ComboBoxItem, University } from '../core/types/combo-box'
 import { 
   createFriendlyFilterValue, 
   resolveLabelFromComboBoxData,
   resolveBooleanLabel,
   resolveStringLabel,
   resolveDateLabel
-} from '../utils/friendlyFilter'
+} from '../core/filters/friendly-filters'
 
 interface UseFriendlyFilterResolverProps {
   filterModel: ProgramFilterModel

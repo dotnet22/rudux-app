@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import type { FriendlyFilterRecord } from '../../modules/programs/types/program'
-import type { FieldResolverConfig } from '../../utils/filters/fieldResolvers'
-import { resolveFieldValue } from '../../utils/filters/fieldResolvers'
-import { createFriendlyFilterValue } from '../../utils/friendlyFilter'
+import type { FieldResolverConfig } from '../../core/filters/field-resolvers'
+import { resolveFieldValue } from '../../core/filters/field-resolvers'
+import { createFriendlyFilterValue } from '../../core/filters/friendly-filters'
 
 /**
  * Configuration for the generic friendly filter resolver
