@@ -3,8 +3,13 @@ import react from '@vitejs/plugin-react'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react({
+    jsxImportSource: '@emotion/react'
+  })],
   server: {
     port: 8081
+  },
+  optimizeDeps: {
+    include: ['@emotion/react', '@emotion/styled', '@mui/material/Tooltip']
   }
 })

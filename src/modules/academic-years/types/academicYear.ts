@@ -8,6 +8,12 @@ export interface AcademicYear {
   FinancialYearToDate: string
   CalendarYearFromDate: string
   CalendarYearToDate: string
+  Description?: string | null
+}
+
+export interface OperationResponse {
+  id?: number
+  rowsAffected: number
 }
 
 export interface FilterModel {

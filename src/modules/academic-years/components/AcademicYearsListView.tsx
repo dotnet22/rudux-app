@@ -7,7 +7,9 @@ import {
   type GridSortModel,
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
-import { Box, Chip, Paper, Typography, Alert, Button } from '@mui/material'
+import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
+import { Add, Edit } from '@mui/icons-material'
+import { useNavigate } from 'react-router'
 import { useGetAcademicYearsQuery } from '../store/api/academicYearsApi'
 import {
   selectAllAcademicYears,
@@ -23,6 +25,7 @@ import type { AcademicYear } from '../types/academicYear'
 
 const ListView = () => {
   const dispatch = useDispatch()
+  const navigate = useNavigate()
   const academicYears = useSelector(selectAllAcademicYears)
   const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading } = useSelector(selectAcademicYearsState)
   const { processError } = useApiError()
@@ -106,6 +109,25 @@ const ListView = () => {
         )
       },
     },
+    {
+      field: 'actions',
+      headerName: 'Actions',
+      minWidth: 120,
+      flex: 1,
+      sortable: false,
+      renderCell: (params: GridRenderCellParams<AcademicYear>) => {
+        return (
+          <Button
+            variant="outlined"
+            size="small"
+            startIcon={<Edit />}
+            onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/edit`)}
+          >
+            Edit
+          </Button>
+        )
+      },
+    },
   ]
 
   const handlePaginationModelChange = (model: GridPaginationModel) => {
@@ -166,9 +188,18 @@ const ListView = () => {
 
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
-      <Typography variant="h5" gutterBottom>
-        Academic Years
-      </Typography>
+      <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+        <Typography variant="h5">
+          Academic Years
+        </Typography>
+        <Button
+          variant="contained"
+          startIcon={<Add />}
+          onClick={() => navigate('/academic-years/new')}
+        >
+          Add Academic Year
+        </Button>
+      </Stack>
       <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
           rows={academicYears}
