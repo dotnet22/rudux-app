@@ -19,7 +19,7 @@ export const academicYearsApi = createApi({
     }),
     updateAcademicYear: builder.mutation<OperationResponse, AcademicYear>({
       query: (body) => ({
-        url: '/MST_AcademicYear/insert',
+        url: '/MST_AcademicYear/update',
         method: 'POST',
         body,
       }),
