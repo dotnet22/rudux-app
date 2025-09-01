@@ -26,7 +26,9 @@
       "Read(d:\\errors/**)",
       "mcp__playwright__browser_evaluate",
       "mcp__playwright__browser_click",
-      "Read(d:\\errors/**)"
+      "Read(d:\\errors/**)",
+      "Read(C:\\Users\\DC\\Documents\\Downloads/**)",
+      "Bash(start \"file:///C:/Users/DC/Documents/Downloads/mermaid-diagram.html\")"
     ],
     "deny": [],
     "ask": []
