@@ -21,7 +21,6 @@ export {
 // Cascading dropdown cache resolution
 export {
   useCascadingCacheDataResolver,
-  useUniversityFacultyCourseResolver,
   type CascadingFieldConfig,
   type CascadingCacheConfig,
   type CascadingCacheResult
@@ -30,6 +29,5 @@ export {
 // Cascading friendly filter with cache integration
 export {
   useFriendlyFilterWithCascadingCache,
-  useUniversityFacultyCourseFriendlyFilter,
   type FriendlyFilterWithCascadingCacheConfig
 } from './useFriendlyFilterWithCascadingCache'

@@ -9,8 +9,11 @@ export type QueryKeyBuilder = (parentValue: string) => readonly unknown[]
 
 /**
  * Configuration for a single cascading field
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  */
-export interface CascadingFieldConfig {
+export interface CascadingFieldConfig<TItem = ComboBoxItem> {
+  /** @internal - Generic type parameter, not directly used but enables type inference */
+  readonly _itemType?: TItem
   /** The field name this config applies to */
   readonly fieldName: string
   /** Query key for independent fields, or query key factory for dependent fields */
@@ -25,24 +28,27 @@ export interface CascadingFieldConfig {
 
 /**
  * Configuration for cascading cache data resolver
+ * @template T The filter model type
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  */
-export interface CascadingCacheConfig<T extends Record<string, unknown>> {
+export interface CascadingCacheConfig<T extends Record<string, unknown>, TItem = ComboBoxItem> {
   /** The filter model containing all field values */
   readonly filterModel: T
   /** Configuration for each cascading field */
-  readonly fieldConfigs: readonly CascadingFieldConfig[]
-  /** Optional global data transformer - converts any cached data to ComboBoxItem[] */
-  readonly dataTransformer?: (data: unknown, fieldName: string) => ComboBoxItem[]
+  readonly fieldConfigs: readonly CascadingFieldConfig<TItem>[]
+  /** Optional global data transformer - converts any cached data to TItem[] */
+  readonly dataTransformer?: (data: unknown, fieldName: string) => TItem[]
   /** Whether the entire resolver is enabled */
   readonly enabled?: boolean
 }
 
 /**
  * Cache data result for a single field
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  */
-export interface FieldCacheResult {
-  /** The resolved combo box items, empty array if not available */
-  readonly data: readonly ComboBoxItem[]
+export interface FieldCacheResult<TItem = ComboBoxItem> {
+  /** The resolved dropdown items, empty array if not available */
+  readonly data: readonly TItem[]
   /** Whether cached data exists and is available */
   readonly isAvailable: boolean
   /** Whether the data array is empty (even if available) */
@@ -53,12 +59,13 @@ export interface FieldCacheResult {
 
 /**
  * Result from cascading cache data resolver
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  */
-export interface CascadingCacheResult {
+export interface CascadingCacheResult<TItem = ComboBoxItem> {
   /** Cache data results keyed by field name */
-  readonly dataByField: Record<string, FieldCacheResult>
+  readonly dataByField: Record<string, FieldCacheResult<TItem>>
   /** Convenience method to get data for a specific field */
-  readonly getFieldData: (fieldName: string) => readonly ComboBoxItem[]
+  readonly getFieldData: (fieldName: string) => readonly TItem[]
   /** Convenience method to check if field data is available */
   readonly isFieldAvailable: (fieldName: string) => boolean
   /** Convenience method to get friendly name for a field */
@@ -72,64 +79,39 @@ export interface CascadingCacheResult {
  * This handles the cascading pattern where child dropdowns depend on parent selections.
  * 
  * @template T The type of the filter model object
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  * @param config Configuration for cascading fields and their cache dependencies
  * @returns Cascading cache result with data for all fields
  * 
  * @example
  * ```tsx
- * // With query-key-factory
- * import { createQueryKeys } from '@lukemorales/query-key-factory'
- * 
- * const queries = createQueryKeys('academic', {
- *   universities: null,
- *   faculties: (universityId: string) => ({ queryKey: ['faculties', universityId] }),
- *   courses: (facultyId: string) => ({ queryKey: ['courses', facultyId] })
- * })
- * 
- * const { dataByField, getFieldData, getFieldFriendlyName } = useCascadingCacheDataResolver({
- *   filterModel: { universityId: 'univ-123', facultyId: null, courseId: null },
+ * // Basic usage with default ComboBoxItem type
+ * const { getFieldData } = useCascadingCacheDataResolver({
+ *   filterModel: { universityId: 'univ-123', facultyId: null },
  *   fieldConfigs: [
- *     {
- *       fieldName: 'universityId',
- *       queryKey: queries.universities.queryKey,
- *       friendlyName: 'University'
- *     },
- *     {
- *       fieldName: 'facultyId',
- *       queryKey: (universityId) => queries.faculties(universityId).queryKey,
- *       parentField: 'universityId',
- *       friendlyName: 'Faculty'
- *     },
- *     {
- *       fieldName: 'courseId',
- *       queryKey: (facultyId) => queries.courses(facultyId).queryKey,
- *       parentField: 'facultyId',
- *       friendlyName: 'Course'
- *     }
- *   ],
- *   dataTransformer: (data, fieldName) => {
- *     // Single transformer for all field types
- *     if (Array.isArray(data)) {
- *       return data.map(item => ({
- *         Value: item.id || item.value,
- *         Label: item.name || item.label || item.title
- *       }))
- *     }
- *     return []
- *   }
+ *     { fieldName: 'universityId', queryKey: ['universities'] },
+ *     { fieldName: 'facultyId', queryKey: (id) => ['faculties', id], parentField: 'universityId' }
+ *   ]
  * })
+ * 
+ * // Custom item type
+ * interface CustomItem { id: string; value: string; label: string }
+ * const result = useCascadingCacheDataResolver<FilterModel, CustomItem>({ ... })
  * ```
  */
-export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>(
-  config: CascadingCacheConfig<T>
-): CascadingCacheResult => {
+export const useCascadingCacheDataResolver = <
+  T extends Record<string, unknown>,
+  TItem = ComboBoxItem
+>(
+  config: CascadingCacheConfig<T, TItem>
+): CascadingCacheResult<TItem> => {
   const queryClient = useQueryClient()
   const { filterModel, fieldConfigs, dataTransformer, enabled = true } = config
 
   // Resolve all field data using direct query client access (avoiding conditional hooks)
-  const resolverResults = useMemo((): Record<string, FieldCacheResult> => {
+  const resolverResults = useMemo((): Record<string, FieldCacheResult<TItem>> => {
     if (!enabled) {
-      const emptyResults: Record<string, FieldCacheResult> = {}
+      const emptyResults: Record<string, FieldCacheResult<TItem>> = {}
       fieldConfigs.forEach(config => {
         emptyResults[config.fieldName] = {
           data: [],
@@ -141,7 +123,7 @@ export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>
       return emptyResults
     }
 
-    const results: Record<string, FieldCacheResult> = {}
+    const results: Record<string, FieldCacheResult<TItem>> = {}
 
     for (const fieldConfig of fieldConfigs) {
       const { fieldName, queryKey, parentField, enabled: fieldEnabled = true, friendlyName } = fieldConfig
@@ -203,14 +185,14 @@ export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>
         continue
       }
 
-      // Transform cached data using the global transformer or assume it's ComboBoxItem[]
-      let comboBoxItems: ComboBoxItem[] = []
+      // Transform cached data using the global transformer or assume it's TItem[]
+      let transformedItems: TItem[] = []
       
       if (dataTransformer) {
-        comboBoxItems = dataTransformer(cachedData, fieldName)
+        transformedItems = dataTransformer(cachedData, fieldName)
       } else if (Array.isArray(cachedData)) {
         // Try to auto-detect common patterns
-        comboBoxItems = cachedData.map((item: unknown) => {
+        transformedItems = cachedData.map((item: unknown) => {
           if (item && typeof item === 'object') {
             const itemObj = item as Record<string, unknown>
             const value = String(itemObj.Value || itemObj.value || itemObj.id || item)
@@ -219,17 +201,17 @@ export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>
               id: value,
               Value: value,
               Label: label
-            }
+            } as TItem
           }
           const stringValue = String(item)
-          return { id: stringValue, Value: stringValue, Label: stringValue }
+          return { id: stringValue, Value: stringValue, Label: stringValue } as TItem
         })
       }
 
       results[fieldName] = {
-        data: comboBoxItems,
+        data: transformedItems,
         isAvailable: true,
-        isEmpty: comboBoxItems.length === 0,
+        isEmpty: transformedItems.length === 0,
         friendlyName: friendlyName || fieldName
       }
     }
@@ -239,7 +221,7 @@ export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>
 
   // Convenience methods
   const getFieldData = useMemo(() => 
-    (fieldName: string): readonly ComboBoxItem[] => 
+    (fieldName: string): readonly TItem[] => 
       resolverResults[fieldName]?.data || []
   , [resolverResults])
 
@@ -264,54 +246,4 @@ export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>
     getFieldFriendlyName,
     isAnyLoading
   }), [resolverResults, getFieldData, isFieldAvailable, getFieldFriendlyName, isAnyLoading])
-}
-
-/**
- * Simplified cascading resolver for common university -> faculty -> course pattern
- * Works with query-key-factory or simple query keys
- */
-export const useUniversityFacultyCourseResolver = <T extends Record<string, unknown>>(
-  filterModel: T,
-  fieldNames: {
-    university: keyof T
-    faculty: keyof T
-    course: keyof T
-  },
-  queryKeys: {
-    universities: readonly unknown[]
-    faculties: QueryKeyBuilder
-    courses: QueryKeyBuilder
-  },
-  options?: {
-    friendlyNames?: {
-      university?: string
-      faculty?: string
-      course?: string
-    }
-    dataTransformer?: (data: unknown, fieldName: string) => ComboBoxItem[]
-  }
-) => {
-  return useCascadingCacheDataResolver({
-    filterModel,
-    fieldConfigs: [
-      {
-        fieldName: String(fieldNames.university),
-        queryKey: queryKeys.universities,
-        friendlyName: options?.friendlyNames?.university || 'University'
-      },
-      {
-        fieldName: String(fieldNames.faculty),
-        queryKey: queryKeys.faculties,
-        parentField: String(fieldNames.university),
-        friendlyName: options?.friendlyNames?.faculty || 'Faculty'
-      },
-      {
-        fieldName: String(fieldNames.course),
-        queryKey: queryKeys.courses,
-        parentField: String(fieldNames.faculty),
-        friendlyName: options?.friendlyNames?.course || 'Course'
-      }
-    ],
-    dataTransformer: options?.dataTransformer
-  })
 }

@@ -8,16 +8,18 @@ import type { ComboBoxItem } from '../../types/combo-box'
 
 /**
  * Configuration for friendly filter with cascading cache data
+ * @template T The filter model type
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  */
-export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string, unknown>> {
+export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string, unknown>, TItem = ComboBoxItem> {
   /** The filter model containing all field values */
   readonly filterModel: T
   /** Configuration for cascading cache fields */
-  readonly cascadingFields: readonly CascadingFieldConfig[]
+  readonly cascadingFields: readonly CascadingFieldConfig<TItem>[]
   /** Field resolvers for non-cascading fields */
   readonly fieldResolvers?: FieldResolverConfig<T>
   /** Global data transformer for cache data */
-  readonly dataTransformer?: (data: unknown, fieldName: string) => ComboBoxItem[]
+  readonly dataTransformer?: (data: unknown, fieldName: string) => TItem[]
   /** Default date format for date fields */
   readonly dateFormat?: string
   /** Whether the resolver is enabled */
@@ -29,66 +31,28 @@ export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string,
  * This integrates cascading cache data resolution with the existing filter resolver system.
  * 
  * @template T The type of the filter model object
+ * @template TItem The type of dropdown item (defaults to ComboBoxItem)
  * @param config Configuration object with filter model and cascading field configs
  * @returns Friendly filter record with resolved labels from cascading cache
  * 
  * @example
  * ```tsx
- * // With query-key-factory and custom friendly names
- * import { createQueryKeys } from '@lukemorales/query-key-factory'
- * 
- * const queries = createQueryKeys('academic', {
- *   universities: null,
- *   faculties: (universityId: string) => ({ queryKey: ['faculties', universityId] }),
- *   courses: (facultyId: string) => ({ queryKey: ['courses', facultyId] })
- * })
- * 
  * const friendlyFilter = useFriendlyFilterWithCascadingCache({
- *   filterModel: {
- *     universityId: 'univ-123',
- *     facultyId: 'fac-456',
- *     courseId: null,
- *     isActive: true,
- *     searchTerm: 'computer'
- *   },
- *   cascadingFields: [
- *     {
- *       fieldName: 'universityId',
- *       queryKey: queries.universities.queryKey,
- *       friendlyName: 'Institution' // Custom name
- *     },
- *     {
- *       fieldName: 'facultyId',
- *       queryKey: (universityId) => queries.faculties(universityId).queryKey,
- *       parentField: 'universityId',
- *       friendlyName: 'School' // Custom name
- *     },
- *     {
- *       fieldName: 'courseId',
- *       queryKey: (facultyId) => queries.courses(facultyId).queryKey,
- *       parentField: 'facultyId',
- *       friendlyName: 'Program' // Custom name
- *     }
- *   ],
- *   dataTransformer: (data, fieldName) => {
- *     // Single transformer for all fields
- *     if (Array.isArray(data)) {
- *       return data.map(item => ({
- *         Value: item.id,
- *         Label: item.name
- *       }))
- *     }
- *     return []
- *   },
- *   fieldResolvers: {
- *     isActive: { type: 'boolean' },
- *     searchTerm: { type: 'string' }
- *   }
+ *   filterModel: { universityId: 'univ-123', isActive: true },
+ *   cascadingFields: [{
+ *     fieldName: 'universityId',
+ *     queryKey: ['universities'],
+ *     friendlyName: 'Institution'
+ *   }],
+ *   fieldResolvers: { isActive: { type: 'boolean' } }
  * })
  * ```
  */
-export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unknown>>(
-  config: FriendlyFilterWithCascadingCacheConfig<T>
+export const useFriendlyFilterWithCascadingCache = <
+  T extends Record<string, unknown>,
+  TItem = ComboBoxItem
+>(
+  config: FriendlyFilterWithCascadingCacheConfig<T, TItem>
 ): FriendlyFilterRecord<T> => {
   const { 
     filterModel, 
@@ -100,7 +64,7 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
   } = config
 
   // Get cascading cache data for all configured fields
-  const { dataByField } = useCascadingCacheDataResolver({
+  const { dataByField } = useCascadingCacheDataResolver<T, TItem>({
     filterModel,
     fieldConfigs: cascadingFields,
     dataTransformer,
@@ -130,7 +94,7 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
         if (cacheData?.isAvailable) {
           resolver = {
             type: 'dropdown' as const,
-            dataSource: [...cacheData.data], // Create a copy for immutability
+            dataSource: [...cacheData.data] as unknown as ComboBoxItem[], // Type assertion needed for compatibility
             ...(resolver as unknown as Record<string, unknown> || {}) // Allow override of resolver properties
           }
         }
@@ -153,58 +117,4 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
 
     return result
   }, [filterModel, dataByField, cascadingFieldNames, fieldResolvers, dateFormat])
-}
-
-/**
- * Simplified hook for the common university -> faculty -> course cascading pattern
- * Works with query-key-factory and supports custom friendly names
- */
-export const useUniversityFacultyCourseFriendlyFilter = <
-  T extends Record<string, unknown>
->(
-  filterModel: T,
-  fieldNames: {
-    university: keyof T
-    faculty: keyof T
-    course: keyof T
-  },
-  queryKeys: {
-    universities: readonly unknown[]
-    faculties: (universityId: string) => readonly unknown[]
-    courses: (facultyId: string) => readonly unknown[]
-  },
-  options?: {
-    friendlyNames?: {
-      university?: string
-      faculty?: string
-      course?: string
-    }
-    dataTransformer?: (data: unknown, fieldName: string) => ComboBoxItem[]
-    otherFieldResolvers?: FieldResolverConfig<T>
-  }
-) => {
-  return useFriendlyFilterWithCascadingCache({
-    filterModel,
-    cascadingFields: [
-      {
-        fieldName: String(fieldNames.university),
-        queryKey: queryKeys.universities,
-        friendlyName: options?.friendlyNames?.university || 'University'
-      },
-      {
-        fieldName: String(fieldNames.faculty),
-        queryKey: queryKeys.faculties,
-        parentField: String(fieldNames.university),
-        friendlyName: options?.friendlyNames?.faculty || 'Faculty'
-      },
-      {
-        fieldName: String(fieldNames.course),
-        queryKey: queryKeys.courses,
-        parentField: String(fieldNames.faculty),
-        friendlyName: options?.friendlyNames?.course || 'Course'
-      }
-    ],
-    dataTransformer: options?.dataTransformer,
-    fieldResolvers: options?.otherFieldResolvers
-  })
 }
