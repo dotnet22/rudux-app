@@ -210,14 +210,19 @@ export const useCascadingCacheDataResolver = <T extends Record<string, unknown>>
         comboBoxItems = dataTransformer(cachedData, fieldName)
       } else if (Array.isArray(cachedData)) {
         // Try to auto-detect common patterns
-        comboBoxItems = cachedData.map((item: any) => {
+        comboBoxItems = cachedData.map((item: unknown) => {
           if (item && typeof item === 'object') {
+            const itemObj = item as Record<string, unknown>
+            const value = String(itemObj.Value || itemObj.value || itemObj.id || item)
+            const label = String(itemObj.Label || itemObj.label || itemObj.name || itemObj.title || item)
             return {
-              Value: item.Value || item.value || item.id || String(item),
-              Label: item.Label || item.label || item.name || item.title || String(item)
+              id: value,
+              Value: value,
+              Label: label
             }
           }
-          return { Value: String(item), Label: String(item) }
+          const stringValue = String(item)
+          return { id: stringValue, Value: stringValue, Label: stringValue }
         })
       }
 

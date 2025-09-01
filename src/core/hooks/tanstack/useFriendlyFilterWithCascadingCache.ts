@@ -1,9 +1,10 @@
 import { useMemo } from 'react'
 import type { FriendlyFilterRecord } from '../../../modules/programs/types/program'
-import type { FieldResolverConfig } from '../../filters/field-resolvers'
+import type { FieldResolverConfig, FieldResolver } from '../../filters/field-resolvers'
 import { resolveFieldValue } from '../../filters/field-resolvers'
 import { createFriendlyFilterValue } from '../../filters/friendly-filters'
 import { useCascadingCacheDataResolver, type CascadingFieldConfig } from './useCascadingCacheDataResolver'
+import type { ComboBoxItem } from '../../types/combo-box'
 
 /**
  * Configuration for friendly filter with cascading cache data
@@ -16,7 +17,7 @@ export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string,
   /** Field resolvers for non-cascading fields */
   readonly fieldResolvers?: FieldResolverConfig<T>
   /** Global data transformer for cache data */
-  readonly dataTransformer?: (data: unknown, fieldName: string) => Array<{ Value: string, Label: string }>
+  readonly dataTransformer?: (data: unknown, fieldName: string) => ComboBoxItem[]
   /** Default date format for date fields */
   readonly dateFormat?: string
   /** Whether the resolver is enabled */
@@ -99,7 +100,7 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
   } = config
 
   // Get cascading cache data for all configured fields
-  const { dataByField, getFieldFriendlyName } = useCascadingCacheDataResolver({
+  const { dataByField } = useCascadingCacheDataResolver({
     filterModel,
     fieldConfigs: cascadingFields,
     dataTransformer,
@@ -119,7 +120,7 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
       if (!Object.prototype.hasOwnProperty.call(filterModel, key)) continue
       
       const value = filterModel[key]
-      let resolver = fieldResolvers[key]
+      let resolver = (fieldResolvers as Record<string, FieldResolver<unknown>>)[key] as FieldResolver<unknown> | undefined
       let friendlyLabel = ''
       
       // If this is a cascading field, use the cached data and friendly name
@@ -130,19 +131,14 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
           resolver = {
             type: 'dropdown' as const,
             dataSource: [...cacheData.data], // Create a copy for immutability
-            ...resolver // Allow override of resolver properties
+            ...(resolver as unknown as Record<string, unknown> || {}) // Allow override of resolver properties
           }
         }
         
         // Resolve the field value to a friendly label using cache data
         friendlyLabel = resolveFieldValue(value, resolver, dateFormat)
         
-        // If the resolved label is generic and we have a friendly name, enhance it
-        if (value && friendlyLabel !== 'All' && friendlyLabel !== 'Unknown') {
-          const fieldFriendlyName = getFieldFriendlyName(key)
-          // Keep the resolved label (which contains the actual selection) 
-          // The friendly field name is available via getFieldFriendlyName if needed
-        }
+        // Field friendly name is available via getFieldFriendlyName if needed for UI display
       } else {
         // Non-cascading field, use standard resolution
         friendlyLabel = resolveFieldValue(value, resolver, dateFormat)
@@ -156,7 +152,7 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
     }
 
     return result
-  }, [filterModel, dataByField, cascadingFieldNames, fieldResolvers, dateFormat, getFieldFriendlyName])
+  }, [filterModel, dataByField, cascadingFieldNames, fieldResolvers, dateFormat])
 }
 
 /**
@@ -183,7 +179,7 @@ export const useUniversityFacultyCourseFriendlyFilter = <
       faculty?: string
       course?: string
     }
-    dataTransformer?: (data: unknown, fieldName: string) => Array<{ Value: string, Label: string }>
+    dataTransformer?: (data: unknown, fieldName: string) => ComboBoxItem[]
     otherFieldResolvers?: FieldResolverConfig<T>
   }
 ) => {

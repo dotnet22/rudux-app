@@ -57,7 +57,7 @@ export const useFriendlyFilterWithCache = <
       let resolver = fieldResolvers[key]
       
       // If this is the cache-dependent field and cache data is available
-      if (key === fieldKey && isAvailable) {
+      if (key === String(fieldKey) && isAvailable) {
         resolver = {
           type: 'dropdown' as const,
           dataSource: [...cacheData], // Create a copy for immutability
