@@ -1,20 +1,24 @@
 # TanStack Query Cache Data Access for Filters
 
-Simple React hooks for accessing cached data from TanStack Query to use with the existing filter resolver system. These utilities allow you to retrieve dropdown/combo box data from cache to create friendly filter labels.
+Advanced React hooks for accessing cached data from TanStack Query with full cascading dropdown support and friendly filter integration. Designed to work seamlessly with `@lukemorales/query-key-factory` and provide the same functionality as the existing Redux-based filter system.
 
 ## Overview
 
-This module provides two focused hooks:
+This module provides comprehensive cache data access utilities:
 
-- **Cache Data Access** - Retrieve dropdown data from TanStack Query cache
-- **Friendly Filter Integration** - Use cached data with the existing filter resolver system
+- **Single Field Cache Access** - Simple dropdown data retrieval
+- **Cascading Dropdown Support** - Parent-child dropdown dependencies (University → Faculty → Course)
+- **Friendly Filter Integration** - Convert cache data to user-friendly filter labels
+- **Query Key Factory Support** - Native integration with `@lukemorales/query-key-factory`
+- **Custom Field Names** - Configurable friendly names for any field
+- **Smart Data Transformation** - Single transformer for all fields with auto-detection fallbacks
 
 ## Installation & Setup
 
-Ensure you have TanStack Query installed and configured in your project:
+Ensure you have the required packages installed:
 
 ```bash
-npm install @tanstack/react-query
+npm install @tanstack/react-query @lukemorales/query-key-factory
 ```
 
 ```tsx
@@ -30,6 +34,23 @@ export default function App() {
     </QueryClientProvider>
   )
 }
+```
+
+### Query Key Factory Setup (Recommended)
+
+```tsx
+// queries/index.ts
+import { createQueryKeys } from '@lukemorales/query-key-factory'
+
+export const queries = createQueryKeys('academic', {
+  universities: null,
+  faculties: (universityId: string) => ({
+    queryKey: ['faculties', universityId]
+  }),
+  courses: (facultyId: string) => ({
+    queryKey: ['courses', facultyId]
+  })
+})
 ```
 
 ## Core Hooks
@@ -174,10 +195,11 @@ const ComplexDropdown = () => {
 
 ### `useCascadingCacheDataResolver`
 
-Handles cascading dropdown patterns where child dropdowns depend on parent selections, just like the existing Redux solution.
+Handles cascading dropdown patterns where child dropdowns depend on parent selections, with full query-key-factory support and custom friendly names.
 
 ```tsx
 import { useCascadingCacheDataResolver } from '@/core/hooks/tanstack'
+import { queries } from './queries'
 
 const CascadingDropdowns = () => {
   const [filterModel, setFilterModel] = useState({
@@ -186,46 +208,51 @@ const CascadingDropdowns = () => {
     courseId: null
   })
 
-  const { dataByField, getFieldData, isFieldAvailable } = useCascadingCacheDataResolver({
+  const { 
+    dataByField, 
+    getFieldData, 
+    isFieldAvailable, 
+    getFieldFriendlyName 
+  } = useCascadingCacheDataResolver({
     filterModel,
     fieldConfigs: [
       // Universities (independent)
       {
         fieldName: 'universityId',
-        cacheConfig: {
-          queryKey: ['universities', 'list'] as const,
-          dataSelector: (unis: University[]) => 
-            unis.map(u => ({ Value: u.id, Label: u.name }))
-        }
+        queryKey: queries.universities.queryKey,
+        friendlyName: 'Educational Institution' // Custom friendly name
       },
       // Faculties (depends on university)
       {
         fieldName: 'facultyId',
-        cacheConfig: {
-          queryKey: [] as const, // Will be built dynamically
-          dataSelector: (faculties: Faculty[]) => 
-            faculties.map(f => ({ Value: f.id, Label: f.name }))
-        },
+        queryKey: (universityId) => queries.faculties(universityId).queryKey, // Query key factory
         parentField: 'universityId',
-        buildQueryKey: (universityId) => ['faculties', 'by-university', universityId] as const
+        friendlyName: 'Academic School' // Custom friendly name
       },
       // Courses (depends on faculty)
       {
         fieldName: 'courseId',
-        cacheConfig: {
-          queryKey: [] as const,
-          dataSelector: (courses: Course[]) => 
-            courses.map(c => ({ Value: c.id, Label: c.name }))
-        },
+        queryKey: (facultyId) => queries.courses(facultyId).queryKey, // Query key factory
         parentField: 'facultyId',
-        buildQueryKey: (facultyId) => ['courses', 'by-faculty', facultyId] as const
+        friendlyName: 'Study Program' // Custom friendly name
       }
-    ]
+    ],
+    // Single data transformer for all fields - much cleaner!
+    dataTransformer: (data, fieldName) => {
+      if (Array.isArray(data)) {
+        return data.map(item => ({
+          Value: item.id,
+          Label: item.name
+        }))
+      }
+      return []
+    }
   })
 
   return (
     <div>
       <Autocomplete
+        label={getFieldFriendlyName('universityId')} // Uses custom friendly name
         options={getFieldData('universityId')}
         value={filterModel.universityId}
         onChange={(_, value) => setFilterModel(prev => ({ 
@@ -237,6 +264,7 @@ const CascadingDropdowns = () => {
       />
       
       <Autocomplete
+        label={getFieldFriendlyName('facultyId')} // Uses custom friendly name
         options={getFieldData('facultyId')}
         value={filterModel.facultyId}
         disabled={!isFieldAvailable('facultyId')}
@@ -248,6 +276,7 @@ const CascadingDropdowns = () => {
       />
       
       <Autocomplete
+        label={getFieldFriendlyName('courseId')} // Uses custom friendly name
         options={getFieldData('courseId')}
         value={filterModel.courseId}
         disabled={!isFieldAvailable('courseId')}
@@ -263,10 +292,11 @@ const CascadingDropdowns = () => {
 
 ### `useFriendlyFilterWithCascadingCache`
 
-Combines cascading cache data with friendly filter resolution, providing the same functionality as the Redux-based solution.
+Combines cascading cache data with friendly filter resolution. Works with query-key-factory and supports custom friendly names for clean filter display.
 
 ```tsx
 import { useFriendlyFilterWithCascadingCache } from '@/core/hooks/tanstack'
+import { queries } from './queries'
 
 const CascadingFilterDisplay = () => {
   const [filterModel, setFilterModel] = useState({
@@ -277,36 +307,39 @@ const CascadingFilterDisplay = () => {
     searchTerm: 'computer science'
   })
 
-  // Get friendly labels with cascading cache data
+  // Get friendly labels with cascading cache data - much cleaner API!
   const friendlyFilters = useFriendlyFilterWithCascadingCache({
     filterModel,
     cascadingFields: [
       {
         fieldName: 'universityId',
-        cacheConfig: {
-          queryKey: ['universities', 'list'] as const,
-          dataSelector: (unis: University[]) => unis.map(u => ({ Value: u.id, Label: u.name }))
-        }
+        queryKey: queries.universities.queryKey,
+        friendlyName: 'Institution' // Custom display name
       },
       {
         fieldName: 'facultyId',
-        cacheConfig: {
-          queryKey: [] as const,
-          dataSelector: (faculties: Faculty[]) => faculties.map(f => ({ Value: f.id, Label: f.name }))
-        },
+        queryKey: (universityId) => queries.faculties(universityId).queryKey, // Query key factory
         parentField: 'universityId',
-        buildQueryKey: (universityId) => ['faculties', 'by-university', universityId] as const
+        friendlyName: 'School' // Custom display name
       },
       {
         fieldName: 'courseId',
-        cacheConfig: {
-          queryKey: [] as const,
-          dataSelector: (courses: Course[]) => courses.map(c => ({ Value: c.id, Label: c.name }))
-        },
+        queryKey: (facultyId) => queries.courses(facultyId).queryKey, // Query key factory
         parentField: 'facultyId',
-        buildQueryKey: (facultyId) => ['courses', 'by-faculty', facultyId] as const
+        friendlyName: 'Program' // Custom display name
       }
     ],
+    // Single data transformer for all cascading fields
+    dataTransformer: (data, fieldName) => {
+      if (Array.isArray(data)) {
+        return data.map(item => ({
+          Value: item.id,
+          Label: item.name
+        }))
+      }
+      return []
+    },
+    // Field resolvers for non-cascading fields
     fieldResolvers: {
       isActive: { 
         type: 'boolean',
@@ -327,7 +360,7 @@ const CascadingFilterDisplay = () => {
         filter.Value !== null && (
           <Chip 
             key={key}
-            label={`${key}: ${filter.Label}`}
+            label={filter.Label} // Uses resolved friendly labels
             onDelete={() => {
               // Handle cascading resets
               if (key === 'universityId') {
@@ -348,10 +381,11 @@ const CascadingFilterDisplay = () => {
 
 ### Simplified University-Faculty-Course Pattern
 
-For the common cascading pattern, use the simplified hook:
+For the common cascading pattern, use the simplified hook with query-key-factory:
 
 ```tsx
 import { useUniversityFacultyCourseFriendlyFilter } from '@/core/hooks/tanstack'
+import { queries } from './queries'
 
 const SimplifiedCascadingFilter = () => {
   const filterModel = {
@@ -369,16 +403,47 @@ const SimplifiedCascadingFilter = () => {
       course: 'courseId'
     },
     {
-      universities: (unis: University[]) => unis.map(u => ({ Value: u.id, Label: u.name })),
-      faculties: (faculties: Faculty[]) => faculties.map(f => ({ Value: f.id, Label: f.name })),
-      courses: (courses: Course[]) => courses.map(c => ({ Value: c.id, Label: c.name }))
+      universities: queries.universities.queryKey,
+      faculties: (universityId) => queries.faculties(universityId).queryKey,
+      courses: (facultyId) => queries.courses(facultyId).queryKey
     },
     {
-      isActive: { type: 'boolean' }
+      friendlyNames: {
+        university: 'Educational Institution',
+        faculty: 'Academic School',
+        course: 'Study Program'
+      },
+      dataTransformer: (data, fieldName) => {
+        if (Array.isArray(data)) {
+          return data.map(item => ({
+            Value: item.id,
+            Label: item.name
+          }))
+        }
+        return []
+      },
+      otherFieldResolvers: {
+        isActive: { 
+          type: 'boolean',
+          booleanLabels: {
+            true: 'Active Programs',
+            false: 'Inactive Programs',
+            null: 'All Programs'
+          }
+        }
+      }
     }
   )
 
-  // Use friendlyFilters...
+  return (
+    <div>
+      {Object.entries(friendlyFilters).map(([key, filter]) => 
+        filter.Value !== null && (
+          <Chip key={key} label={filter.Label} />
+        )
+      )}
+    </div>
+  )
 }
 ```
 
@@ -550,53 +615,88 @@ const StrictlyTypedFilter = () => {
 
 ## Best Practices
 
-### 1. Use const assertions for query keys
+### 1. Use query-key-factory for better organization
+```tsx
+// Recommended: Centralized query key management
+import { createQueryKeys } from '@lukemorales/query-key-factory'
+
+const queries = createQueryKeys('academic', {
+  universities: null,
+  faculties: (universityId: string) => ({ queryKey: ['faculties', universityId] }),
+  courses: (facultyId: string) => ({ queryKey: ['courses', facultyId] })
+})
+
+// Usage in hooks
+const { getFieldData } = useCascadingCacheDataResolver({
+  filterModel,
+  fieldConfigs: [
+    {
+      fieldName: 'universityId',
+      queryKey: queries.universities.queryKey // Type-safe and centralized
+    }
+  ]
+})
+```
+
+### 2. Use single dataTransformer instead of multiple selectors
+```tsx
+// Recommended: Single transformer for all fields
+const commonDataTransformer = (data: unknown, fieldName: string): ComboBoxItem[] => {
+  if (Array.isArray(data)) {
+    return data.map(item => ({
+      Value: item.id || item.pk || item.value,
+      Label: item.name || item.title || item.label
+    }))
+  }
+  return []
+}
+
+// Apply to all hooks
+const friendlyFilters = useFriendlyFilterWithCascadingCache({
+  filterModel,
+  cascadingFields: [...],
+  dataTransformer: commonDataTransformer // Reuse everywhere
+})
+```
+
+### 3. Provide meaningful friendly names
+```tsx
+// Good: Descriptive friendly names
+{
+  fieldName: 'universityId',
+  queryKey: queries.universities.queryKey,
+  friendlyName: 'Educational Institution' // Clear and descriptive
+}
+
+// Avoid: Generic or technical names
+{
+  fieldName: 'universityId',
+  queryKey: queries.universities.queryKey,
+  friendlyName: 'University ID' // Too technical
+}
+```
+
+### 4. Handle auto-detection gracefully
+```tsx
+// The hooks provide smart auto-detection as fallback
+const { getFieldData } = useCascadingCacheDataResolver({
+  filterModel,
+  fieldConfigs: [...],
+  // No dataTransformer provided - will auto-detect:
+  // Value: item.Value || item.value || item.id
+  // Label: item.Label || item.label || item.name || item.title
+})
+```
+
+### 5. Use const assertions for type safety
 ```tsx
 // Good: Prevents accidental mutations and improves type inference
 const { data } = useCacheDataResolver({
   queryKey: ['universities', 'active'] as const
 })
 
-// Avoid: Mutable array type
+// Better: Use query-key-factory (automatically const)
 const { data } = useCacheDataResolver({
-  queryKey: ['universities', 'active'] 
+  queryKey: queries.universities.queryKey // Already const from factory
 })
-```
-
-### 2. Define reusable selector functions
-```tsx
-// Create typed selector functions
-const selectUniversityOptions = (response: ApiResponse<University[]>): ComboBoxItem[] =>
-  response.data.map(university => ({
-    Value: university.id,
-    Label: `${university.name} (${university.code})`
-  }))
-
-// Reuse across components
-const UniversityDropdown = () => {
-  const { data } = useCacheDataResolver({
-    queryKey: ['universities', 'all'] as const,
-    dataSelector: selectUniversityOptions
-  })
-}
-```
-
-### 3. Use discriminated unions for field types
-```tsx
-interface FilterField<T = any> {
-  type: 'dropdown' | 'boolean' | 'string' | 'date'
-  value: T
-}
-
-interface DropdownField extends FilterField<string | null> {
-  type: 'dropdown'
-  options: ComboBoxItem[]
-}
-
-interface BooleanField extends FilterField<boolean | null> {
-  type: 'boolean'
-  labels?: { true: string, false: string, null: string }
-}
-
-type TypedFilterField = DropdownField | BooleanField
 ```

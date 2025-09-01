@@ -15,6 +15,8 @@ export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string,
   readonly cascadingFields: readonly CascadingFieldConfig[]
   /** Field resolvers for non-cascading fields */
   readonly fieldResolvers?: FieldResolverConfig<T>
+  /** Global data transformer for cache data */
+  readonly dataTransformer?: (data: unknown, fieldName: string) => Array<{ Value: string, Label: string }>
   /** Default date format for date fields */
   readonly dateFormat?: string
   /** Whether the resolver is enabled */
@@ -31,6 +33,15 @@ export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string,
  * 
  * @example
  * ```tsx
+ * // With query-key-factory and custom friendly names
+ * import { createQueryKeys } from '@lukemorales/query-key-factory'
+ * 
+ * const queries = createQueryKeys('academic', {
+ *   universities: null,
+ *   faculties: (universityId: string) => ({ queryKey: ['faculties', universityId] }),
+ *   courses: (facultyId: string) => ({ queryKey: ['courses', facultyId] })
+ * })
+ * 
  * const friendlyFilter = useFriendlyFilterWithCascadingCache({
  *   filterModel: {
  *     universityId: 'univ-123',
@@ -42,30 +53,32 @@ export interface FriendlyFilterWithCascadingCacheConfig<T extends Record<string,
  *   cascadingFields: [
  *     {
  *       fieldName: 'universityId',
- *       cacheConfig: {
- *         queryKey: ['universities', 'list'] as const,
- *         dataSelector: (unis: University[]) => unis.map(u => ({ Value: u.id, Label: u.name }))
- *       }
+ *       queryKey: queries.universities.queryKey,
+ *       friendlyName: 'Institution' // Custom name
  *     },
  *     {
  *       fieldName: 'facultyId',
- *       cacheConfig: {
- *         queryKey: [] as const,
- *         dataSelector: (faculties: Faculty[]) => faculties.map(f => ({ Value: f.id, Label: f.name }))
- *       },
+ *       queryKey: (universityId) => queries.faculties(universityId).queryKey,
  *       parentField: 'universityId',
- *       buildQueryKey: (universityId) => ['faculties', 'by-university', universityId] as const
+ *       friendlyName: 'School' // Custom name
  *     },
  *     {
  *       fieldName: 'courseId',
- *       cacheConfig: {
- *         queryKey: [] as const,
- *         dataSelector: (courses: Course[]) => courses.map(c => ({ Value: c.id, Label: c.name }))
- *       },
+ *       queryKey: (facultyId) => queries.courses(facultyId).queryKey,
  *       parentField: 'facultyId',
- *       buildQueryKey: (facultyId) => ['courses', 'by-faculty', facultyId] as const
+ *       friendlyName: 'Program' // Custom name
  *     }
  *   ],
+ *   dataTransformer: (data, fieldName) => {
+ *     // Single transformer for all fields
+ *     if (Array.isArray(data)) {
+ *       return data.map(item => ({
+ *         Value: item.id,
+ *         Label: item.name
+ *       }))
+ *     }
+ *     return []
+ *   },
  *   fieldResolvers: {
  *     isActive: { type: 'boolean' },
  *     searchTerm: { type: 'string' }
@@ -80,14 +93,16 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
     filterModel, 
     cascadingFields, 
     fieldResolvers = {}, 
+    dataTransformer,
     dateFormat = 'MM/DD/YYYY',
     enabled = true
   } = config
 
   // Get cascading cache data for all configured fields
-  const { dataByField } = useCascadingCacheDataResolver({
+  const { dataByField, getFieldFriendlyName } = useCascadingCacheDataResolver({
     filterModel,
     fieldConfigs: cascadingFields,
+    dataTransformer,
     enabled
   })
 
@@ -105,8 +120,9 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
       
       const value = filterModel[key]
       let resolver = fieldResolvers[key]
+      let friendlyLabel = ''
       
-      // If this is a cascading field, use the cached data
+      // If this is a cascading field, use the cached data and friendly name
       if (cascadingFieldNames.has(key)) {
         const cacheData = dataByField[key]
         
@@ -117,24 +133,35 @@ export const useFriendlyFilterWithCascadingCache = <T extends Record<string, unk
             ...resolver // Allow override of resolver properties
           }
         }
+        
+        // Resolve the field value to a friendly label using cache data
+        friendlyLabel = resolveFieldValue(value, resolver, dateFormat)
+        
+        // If the resolved label is generic and we have a friendly name, enhance it
+        if (value && friendlyLabel !== 'All' && friendlyLabel !== 'Unknown') {
+          const fieldFriendlyName = getFieldFriendlyName(key)
+          // Keep the resolved label (which contains the actual selection) 
+          // The friendly field name is available via getFieldFriendlyName if needed
+        }
+      } else {
+        // Non-cascading field, use standard resolution
+        friendlyLabel = resolveFieldValue(value, resolver, dateFormat)
       }
-      
-      // Resolve the field value to a friendly label
-      const label = resolveFieldValue(value, resolver, dateFormat)
       
       // Create the friendly filter value with proper typing
       result[key] = createFriendlyFilterValue(
-        label, 
+        friendlyLabel, 
         value as string | number | boolean | Date | null
       )
     }
 
     return result
-  }, [filterModel, dataByField, cascadingFieldNames, fieldResolvers, dateFormat])
+  }, [filterModel, dataByField, cascadingFieldNames, fieldResolvers, dateFormat, getFieldFriendlyName])
 }
 
 /**
  * Simplified hook for the common university -> faculty -> course cascading pattern
+ * Works with query-key-factory and supports custom friendly names
  */
 export const useUniversityFacultyCourseFriendlyFilter = <
   T extends Record<string, unknown>
@@ -145,42 +172,43 @@ export const useUniversityFacultyCourseFriendlyFilter = <
     faculty: keyof T
     course: keyof T
   },
-  cacheSelectors: {
-    universities: (data: any) => Array<{ Value: string, Label: string }>
-    faculties: (data: any) => Array<{ Value: string, Label: string }>
-    courses: (data: any) => Array<{ Value: string, Label: string }>
+  queryKeys: {
+    universities: readonly unknown[]
+    faculties: (universityId: string) => readonly unknown[]
+    courses: (facultyId: string) => readonly unknown[]
   },
-  otherFieldResolvers: FieldResolverConfig<T> = {}
+  options?: {
+    friendlyNames?: {
+      university?: string
+      faculty?: string
+      course?: string
+    }
+    dataTransformer?: (data: unknown, fieldName: string) => Array<{ Value: string, Label: string }>
+    otherFieldResolvers?: FieldResolverConfig<T>
+  }
 ) => {
   return useFriendlyFilterWithCascadingCache({
     filterModel,
     cascadingFields: [
       {
         fieldName: String(fieldNames.university),
-        cacheConfig: {
-          queryKey: ['universities', 'list'] as const,
-          dataSelector: cacheSelectors.universities
-        }
+        queryKey: queryKeys.universities,
+        friendlyName: options?.friendlyNames?.university || 'University'
       },
       {
         fieldName: String(fieldNames.faculty),
-        cacheConfig: {
-          queryKey: [] as const,
-          dataSelector: cacheSelectors.faculties
-        },
+        queryKey: queryKeys.faculties,
         parentField: String(fieldNames.university),
-        buildQueryKey: (universityId) => ['faculties', 'by-university', universityId] as const
+        friendlyName: options?.friendlyNames?.faculty || 'Faculty'
       },
       {
         fieldName: String(fieldNames.course),
-        cacheConfig: {
-          queryKey: [] as const,
-          dataSelector: cacheSelectors.courses
-        },
+        queryKey: queryKeys.courses,
         parentField: String(fieldNames.faculty),
-        buildQueryKey: (facultyId) => ['courses', 'by-faculty', facultyId] as const
+        friendlyName: options?.friendlyNames?.course || 'Course'
       }
     ],
-    fieldResolvers: otherFieldResolvers
+    dataTransformer: options?.dataTransformer,
+    fieldResolvers: options?.otherFieldResolvers
   })
 }

@@ -33,6 +33,8 @@ src/
 ├── core/                    # Core shared utilities and abstractions
 │   ├── api/                # Base API utilities, error handling, transforms
 │   ├── filters/            # Filter system (field resolvers, friendly filters)
+│   ├── hooks/              # Core shared hooks
+│   │   └── tanstack/       # TanStack Query cache integration hooks
 │   └── types/             # Shared type definitions
 ├── modules/               # Feature modules (self-contained domains)
 │   ├── academic-years/
@@ -66,7 +68,7 @@ src/
 
 ### Filter System Architecture
 
-The application includes a sophisticated filter system with two main approaches:
+The application includes a sophisticated filter system with multiple approaches:
 
 **1. Core Filter System** (`src/core/filters/`):
 - Generic field resolvers for different data types
@@ -77,6 +79,15 @@ The application includes a sophisticated filter system with two main approaches:
 - `useGenericFriendlyFilterResolver`: Generic hook for any filter model
 - `useGenericFriendlyFilterChange`: Handles filter state changes
 - Performance-optimized with memoization strategies
+
+**3. TanStack Query Cache Integration** (`src/core/hooks/tanstack/`):
+- `useCacheDataResolver`: Access cached dropdown data from TanStack Query
+- `useCascadingCacheDataResolver`: Handle cascading dropdowns (University → Faculty → Course)
+- `useFriendlyFilterWithCache`: Single field cache integration with friendly filters
+- `useFriendlyFilterWithCascadingCache`: Full cascading cache integration with friendly filters
+- Full support for `@lukemorales/query-key-factory`
+- Custom friendly names for any field
+- Smart data transformation with auto-detection fallbacks
 
 ### API Integration
 
@@ -106,14 +117,30 @@ The application includes a sophisticated filter system with two main approaches:
 
 ## Key Conventions
 
+### General Conventions
 - Use existing Material-UI components and follow MUI patterns
 - Module APIs should extend the base RTK Query setup
-- Filter hooks should use the generic resolver system when possible
 - Error handling should use the centralized `useApiError` hook
 - Type definitions should be co-located with their respective modules
 - Use the established folder structure for new features
 - For form-to-entity transformations, use the `sanitizeFormData` utility from `src/core/api/transforms.ts`
 - Module-specific transformers should be placed in `modules/{module}/utils/transforms.ts`
+
+### Filter System Conventions
+- **For Redux-based filters**: Use the generic resolver system (`useGenericFriendlyFilterResolver`)
+- **For TanStack Query cache filters**: Use the TanStack cache integration hooks (`useFriendlyFilterWithCascadingCache`)
+- **Query Key Management**: Use `@lukemorales/query-key-factory` for centralized query key management
+- **Data Transformation**: Prefer single `dataTransformer` functions over multiple field-specific selectors
+- **Friendly Names**: Provide meaningful friendly names for all filter fields using the `friendlyName` property
+- **Cascading Dropdowns**: Use the cascading cache resolver hooks for parent-child dropdown dependencies
+
+### TanStack Query Cache Integration
+- **Cache Data Access**: Use `useCacheDataResolver` for simple dropdown data retrieval
+- **Cascading Dropdowns**: Use `useCascadingCacheDataResolver` for University → Faculty → Course patterns
+- **Friendly Filters**: Use `useFriendlyFilterWithCascadingCache` for complete filter label resolution
+- **Query Keys**: Leverage query-key-factory for type-safe, centralized query key management
+- **Data Transformation**: Implement common `dataTransformer` functions that work across all fields
+- **Auto-Detection**: Rely on smart auto-detection for standard field patterns when possible
 
 ## Environment Setup
 
@@ -121,3 +148,19 @@ The application includes a sophisticated filter system with two main approaches:
 - TypeScript strict mode enabled
 - ESLint configuration with React and TypeScript rules
 - Vite for build tooling and development server
+
+## Key Dependencies
+
+### Core Dependencies
+- **React 19** + TypeScript + Vite
+- **Material-UI v7** for UI components
+- **Redux Toolkit** with RTK Query for state management
+- **React Hook Form** + Zod for form handling
+- **React Router v7** for routing
+
+### Optional TanStack Query Integration
+- **@tanstack/react-query** for alternative cache management
+- **@lukemorales/query-key-factory** for type-safe query key management
+- Hooks available in `src/core/hooks/tanstack/` for cache-based filtering
+
+The application supports both Redux Toolkit (primary) and TanStack Query (optional) approaches for state management and caching, with specialized hooks for integrating TanStack Query cache data with the existing filter system.
