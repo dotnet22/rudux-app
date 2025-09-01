@@ -1,14 +1,13 @@
-# TanStack Query Cache Management Utilities
+# TanStack Query Cache Data Access for Filters
 
-A comprehensive set of React hooks for managing TanStack Query cache operations, following the same architectural patterns as the project's filter resolver system. These utilities provide type-safe, performant cache management with memoization optimizations.
+Simple React hooks for accessing cached data from TanStack Query to use with the existing filter resolver system. These utilities allow you to retrieve dropdown/combo box data from cache to create friendly filter labels.
 
 ## Overview
 
-This module provides three main categories of cache management hooks:
+This module provides two focused hooks:
 
-- **Cache Resolution** - Retrieve and observe cached data with metadata
-- **Cache Management** - Perform cache operations (invalidate, remove, set, prefetch)
-- **Cache Synchronization** - Synchronize data between different query keys
+- **Cache Data Access** - Retrieve dropdown data from TanStack Query cache
+- **Friendly Filter Integration** - Use cached data with the existing filter resolver system
 
 ## Installation & Setup
 
@@ -33,471 +32,571 @@ export default function App() {
 }
 ```
 
-## Cache Resolution Hooks
+## Core Hooks
 
-### `useGenericCacheResolver`
+### `useCacheDataResolver`
 
-The primary hook for resolving cached data with metadata and performance optimizations.
+The primary hook for accessing cached dropdown/combo box data.
 
 ```tsx
-import { useGenericCacheResolver } from '@/core/hooks/tanstack'
+import { useCacheDataResolver } from '@/core/hooks/tanstack'
 
-const UserProfile = ({ userId }: { userId: string }) => {
-  const { data, exists, isStale, lastUpdated } = useGenericCacheResolver({
-    queryKey: {
-      baseKey: 'users',
-      customKey: ['users', userId, 'profile']
-    },
-    selector: (userData: User) => userData.profile,
-    enabled: !!userId
+const FilterForm = () => {
+  const { data: universities, isAvailable } = useCacheDataResolver({
+    queryKey: ['universities', 'list'],
+    dataSelector: (response: ApiResponse<University[]>) => response.data.map(u => ({
+      Value: u.id,
+      Label: u.name
+    })),
+    enabled: true
   })
 
-  if (!exists) return <div>No cached data</div>
-  if (isStale) return <div>Data is stale (last updated: {lastUpdated})</div>
+  if (!isAvailable) return <div>Loading universities...</div>
 
-  return <div>{data?.name}</div>
+  return (
+    <Autocomplete
+      options={universities}
+      getOptionLabel={(option) => option.Label}
+      // ... other props
+    />
+  )
 }
 ```
 
 #### Configuration Options
 
 ```tsx
-interface GenericCacheResolverConfig<T, TData> {
-  queryKey: CacheKeyConfig<T>
-  selector?: (data: TData) => unknown
+interface CacheDataConfig<T> {
+  queryKey: string[]
+  dataSelector?: (cachedData: T) => ComboBoxItem[]
   enabled?: boolean
 }
 
-interface CacheKeyConfig<T> {
-  baseKey: string
-  keyResolver?: (params: T) => string[]
-  customKey?: string[]
+interface CacheDataResult {
+  data: ComboBoxItem[]
+  isAvailable: boolean
+  isEmpty: boolean
 }
 ```
 
-### `useSimpleCacheResolver`
+### `useFriendlyFilterWithCache`
 
-Simplified version for basic cache resolution with string-based query keys.
-
-```tsx
-import { useSimpleCacheResolver } from '@/core/hooks/tanstack'
-
-const SimpleDataDisplay = () => {
-  const { data, exists } = useSimpleCacheResolver(
-    ['posts', 'featured'],
-    (posts: Post[]) => posts.filter(p => p.featured)
-  )
-
-  return exists ? <PostList posts={data} /> : <div>No cached posts</div>
-}
-```
-
-### `useGenericCacheResolverWithMemoization`
-
-Optimized version with pre-computed primitives for memoization in useEffect dependencies.
+Hook that integrates cached dropdown data with the existing filter resolver system.
 
 ```tsx
-import { useGenericCacheResolverWithMemoization } from '@/core/hooks/tanstack'
+import { useFriendlyFilterWithCache } from '@/core/hooks/tanstack'
 
-const OptimizedComponent = () => {
-  const { cacheResult, primitives } = useGenericCacheResolverWithMemoization({
-    queryKey: { baseKey: 'users', customKey: ['users', 'list'] }
+const ProgramsFilter = () => {
+  const [filterModel, setFilterModel] = useState({
+    universityId: '123',
+    facultyId: '456',
+    isActive: true,
+    searchTerm: 'computer'
   })
 
-  // Use primitives in useEffect dependencies for optimal performance
-  useEffect(() => {
-    console.log('Cache changed:', cacheResult.data)
-  }, [primitives]) // Optimized dependencies
-}
-```
-
-## Cache Management Hooks
-
-### `useGenericCacheManager`
-
-Comprehensive cache management operations with error handling and configuration.
-
-```tsx
-import { useGenericCacheManager } from '@/core/hooks/tanstack'
-
-const CacheManager = () => {
-  const {
-    invalidateCache,
-    removeCache,
-    setCache,
-    prefetchCache,
-    getCacheSnapshot,
-    getAllCacheKeys,
-    clearAllCache
-  } = useGenericCacheManager({
-    enabled: true,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 10 * 60 * 1000    // 10 minutes
-  })
-
-  const handleRefreshUser = async (userId: string) => {
-    await invalidateCache(['users', userId])
-  }
-
-  const handlePreloadUserData = async (userId: string) => {
-    await prefetchCache(['users', userId], () => 
-      fetch(`/api/users/${userId}`).then(r => r.json())
-    )
-  }
-
-  const handleCacheUserLocally = (userId: string, userData: User) => {
-    setCache(['users', userId], userData)
-  }
-
-  return (
-    <div>
-      <button onClick={() => handleRefreshUser('123')}>
-        Refresh User 123
-      </button>
-      <button onClick={() => handlePreloadUserData('456')}>
-        Preload User 456
-      </button>
-      <button onClick={clearAllCache}>
-        Clear All Cache
-      </button>
-    </div>
-  )
-}
-```
-
-### `useBatchCacheManager`
-
-Efficient batch operations for multiple cache keys.
-
-```tsx
-import { useBatchCacheManager } from '@/core/hooks/tanstack'
-
-const BatchCacheManager = () => {
-  const { batchOperations } = useBatchCacheManager()
-
-  const handleBulkRefresh = async () => {
-    await batchOperations.invalidateMultiple([
-      ['users', 'list'],
-      ['posts', 'recent'],
-      ['notifications', 'unread']
-    ])
-  }
-
-  const handleBulkCache = () => {
-    batchOperations.setMultiple([
-      { queryKey: ['app', 'theme'], data: 'dark' },
-      { queryKey: ['app', 'language'], data: 'en' },
-      { queryKey: ['app', 'timezone'], data: 'UTC' }
-    ])
-  }
-
-  return (
-    <div>
-      <button onClick={handleBulkRefresh}>Bulk Refresh</button>
-      <button onClick={handleBulkCache}>Bulk Cache Settings</button>
-    </div>
-  )
-}
-```
-
-## Cache Synchronization Hooks
-
-### `useGenericCacheSync`
-
-Synchronize data between different query keys with transformation and conditional logic.
-
-```tsx
-import { useGenericCacheSync } from '@/core/hooks/tanstack'
-
-const UserDataSync = () => {
-  const { syncNow, syncSpecific, getSyncStatus } = useGenericCacheSync({
-    syncConfigs: [
-      {
-        sourceKey: ['users', 'current'],
-        targetKeys: [
-          ['dashboard', 'user'],
-          ['profile', 'user'],
-          ['settings', 'user']
-        ],
-        transformer: (userData: User) => ({
-          ...userData,
-          lastSynced: Date.now()
-        }),
-        syncCondition: (userData: User) => userData.isActive,
-        enabled: true
-      }
-    ],
-    debounceMs: 500,
-    onSyncComplete: (syncedCount) => {
-      console.log(`Synced to ${syncedCount} cache keys`)
+  // Get friendly filter labels with cached university data
+  const friendlyFilter = useFriendlyFilterWithCache(
+    filterModel,
+    'universityId', // Field that uses cached data
+    {
+      queryKey: ['universities', 'list'],
+      dataSelector: (response: ApiResponse<University[]>) => 
+        response.data.map(u => ({ Value: u.id, Label: u.name }))
     },
-    onSyncError: (error) => {
-      console.error('Sync failed:', error)
+    {
+      // Other field resolvers
+      facultyId: { type: 'dropdown', dataSource: facultyOptions },
+      isActive: { type: 'boolean' },
+      searchTerm: { type: 'string' }
     }
-  })
-
-  const status = getSyncStatus()
+  )
 
   return (
     <div>
-      <button onClick={() => syncNow()} disabled={status.syncing}>
-        {status.syncing ? 'Syncing...' : 'Sync Now'}
-      </button>
-      <button onClick={() => syncSpecific(['users', 'current'])}>
-        Sync User Data
-      </button>
-      {status.lastSync && (
-        <p>Last sync: {new Date(status.lastSync).toLocaleString()}</p>
+      <h3>Active Filters:</h3>
+      {Object.entries(friendlyFilter).map(([key, filter]) => 
+        filter.Value && (
+          <Chip key={key} label={`${key}: ${filter.Label}`} />
+        )
       )}
     </div>
   )
 }
 ```
 
-### `useSimpleCacheSync`
+## Usage Examples
 
-Simplified synchronization for basic use cases.
+### Basic Cache Data Access
 
 ```tsx
-import { useSimpleCacheSync } from '@/core/hooks/tanstack'
+import { useCacheDataResolver } from '@/core/hooks/tanstack'
 
-const SimpleSync = () => {
-  const { syncNow } = useSimpleCacheSync(
-    ['users', 'profile'],           // Source key
-    [['users', 'avatar'], ['users', 'settings']], // Target keys
-    (profile: UserProfile) => ({    // Transformer
-      id: profile.id,
-      name: profile.name,
-      email: profile.email
-    })
+// For simple cache data that's already in ComboBoxItem format
+const SimpleDropdown = () => {
+  const { data: options, isAvailable } = useCacheDataResolver({
+    queryKey: ['dropdown', 'simple'],
+    enabled: true
+  })
+
+  return (
+    <Autocomplete
+      options={options}
+      loading={!isAvailable}
+      getOptionLabel={(option) => option.Label}
+      getOptionKey={(option) => option.Value}
+    />
   )
+}
 
-  return <button onClick={() => syncNow()}>Sync Profile</button>
+// For complex API responses that need transformation
+const ComplexDropdown = () => {
+  const { data: universities, isAvailable } = useCacheDataResolver({
+    queryKey: ['universities', 'all'],
+    dataSelector: (response: { data: University[], meta: any }) => 
+      response.data.map(university => ({
+        Value: university.id,
+        Label: `${university.name} (${university.code})`
+      })),
+    enabled: true
+  })
+
+  return (
+    <Autocomplete
+      options={universities}
+      loading={!isAvailable}
+      getOptionLabel={(option) => option.Label}
+    />
+  )
 }
 ```
 
-## Advanced Patterns
+## Cascading Dropdown Support
 
-### Cascading Cache Updates
+### `useCascadingCacheDataResolver`
 
-Handle dependent data relationships with automatic cache synchronization.
+Handles cascading dropdown patterns where child dropdowns depend on parent selections, just like the existing Redux solution.
 
 ```tsx
-const CascadingCacheExample = () => {
-  const { syncNow } = useGenericCacheSync({
-    syncConfigs: [
-      // University selection affects faculty and course caches
+import { useCascadingCacheDataResolver } from '@/core/hooks/tanstack'
+
+const CascadingDropdowns = () => {
+  const [filterModel, setFilterModel] = useState({
+    universityId: 'univ-123',
+    facultyId: null,
+    courseId: null
+  })
+
+  const { dataByField, getFieldData, isFieldAvailable } = useCascadingCacheDataResolver({
+    filterModel,
+    fieldConfigs: [
+      // Universities (independent)
       {
-        sourceKey: ['filters', 'university'],
-        targetKeys: [['filters', 'faculty'], ['filters', 'course']],
-        transformer: () => null, // Clear dependent filters
-        syncCondition: (universityId: string) => !!universityId
+        fieldName: 'universityId',
+        cacheConfig: {
+          queryKey: ['universities', 'list'] as const,
+          dataSelector: (unis: University[]) => 
+            unis.map(u => ({ Value: u.id, Label: u.name }))
+        }
       },
-      // Faculty selection affects course cache
+      // Faculties (depends on university)
       {
-        sourceKey: ['filters', 'faculty'],
-        targetKeys: [['filters', 'course']],
-        transformer: () => null,
-        syncCondition: (facultyId: string) => !!facultyId
+        fieldName: 'facultyId',
+        cacheConfig: {
+          queryKey: [] as const, // Will be built dynamically
+          dataSelector: (faculties: Faculty[]) => 
+            faculties.map(f => ({ Value: f.id, Label: f.name }))
+        },
+        parentField: 'universityId',
+        buildQueryKey: (universityId) => ['faculties', 'by-university', universityId] as const
+      },
+      // Courses (depends on faculty)
+      {
+        fieldName: 'courseId',
+        cacheConfig: {
+          queryKey: [] as const,
+          dataSelector: (courses: Course[]) => 
+            courses.map(c => ({ Value: c.id, Label: c.name }))
+        },
+        parentField: 'facultyId',
+        buildQueryKey: (facultyId) => ['courses', 'by-faculty', facultyId] as const
       }
     ]
   })
 
-  // Automatically sync when university changes
-  useEffect(() => {
-    syncNow()
-  }, [universityId])
+  return (
+    <div>
+      <Autocomplete
+        options={getFieldData('universityId')}
+        value={filterModel.universityId}
+        onChange={(_, value) => setFilterModel(prev => ({ 
+          ...prev, 
+          universityId: value,
+          facultyId: null, // Reset dependent fields
+          courseId: null 
+        }))}
+      />
+      
+      <Autocomplete
+        options={getFieldData('facultyId')}
+        value={filterModel.facultyId}
+        disabled={!isFieldAvailable('facultyId')}
+        onChange={(_, value) => setFilterModel(prev => ({ 
+          ...prev, 
+          facultyId: value,
+          courseId: null // Reset dependent fields
+        }))}
+      />
+      
+      <Autocomplete
+        options={getFieldData('courseId')}
+        value={filterModel.courseId}
+        disabled={!isFieldAvailable('courseId')}
+        onChange={(_, value) => setFilterModel(prev => ({ 
+          ...prev, 
+          courseId: value
+        }))}
+      />
+    </div>
+  )
 }
 ```
 
-### Performance-Optimized Cache Resolution
+### `useFriendlyFilterWithCascadingCache`
 
-Combine multiple cache management hooks with memoization.
+Combines cascading cache data with friendly filter resolution, providing the same functionality as the Redux-based solution.
 
 ```tsx
-const OptimizedCacheComponent = () => {
-  // Memoized cache resolution
-  const { cacheResult, primitives } = useGenericCacheResolverWithMemoization({
-    queryKey: { baseKey: 'users', customKey: ['users', 'active'] },
-    selector: (users: User[]) => users.filter(u => u.isActive)
+import { useFriendlyFilterWithCascadingCache } from '@/core/hooks/tanstack'
+
+const CascadingFilterDisplay = () => {
+  const [filterModel, setFilterModel] = useState({
+    universityId: 'univ-123',
+    facultyId: 'fac-456',
+    courseId: null,
+    isActive: true,
+    searchTerm: 'computer science'
   })
 
-  // Memoized cache sync
-  const { syncResult, primitives: syncPrimitives } = useGenericCacheSyncWithMemoization({
-    syncConfigs: [{
-      sourceKey: ['users', 'active'],
-      targetKeys: [['dashboard', 'activeUsers']]
-    }]
-  })
-
-  // Optimized effect with combined primitives
-  useEffect(() => {
-    if (cacheResult.data) {
-      syncResult.syncNow()
+  // Get friendly labels with cascading cache data
+  const friendlyFilters = useFriendlyFilterWithCascadingCache({
+    filterModel,
+    cascadingFields: [
+      {
+        fieldName: 'universityId',
+        cacheConfig: {
+          queryKey: ['universities', 'list'] as const,
+          dataSelector: (unis: University[]) => unis.map(u => ({ Value: u.id, Label: u.name }))
+        }
+      },
+      {
+        fieldName: 'facultyId',
+        cacheConfig: {
+          queryKey: [] as const,
+          dataSelector: (faculties: Faculty[]) => faculties.map(f => ({ Value: f.id, Label: f.name }))
+        },
+        parentField: 'universityId',
+        buildQueryKey: (universityId) => ['faculties', 'by-university', universityId] as const
+      },
+      {
+        fieldName: 'courseId',
+        cacheConfig: {
+          queryKey: [] as const,
+          dataSelector: (courses: Course[]) => courses.map(c => ({ Value: c.id, Label: c.name }))
+        },
+        parentField: 'facultyId',
+        buildQueryKey: (facultyId) => ['courses', 'by-faculty', facultyId] as const
+      }
+    ],
+    fieldResolvers: {
+      isActive: { 
+        type: 'boolean',
+        booleanLabels: {
+          true: 'Active Only',
+          false: 'Inactive Only',
+          null: 'All Programs'
+        }
+      },
+      searchTerm: { type: 'string' }
     }
-  }, [...primitives, ...syncPrimitives])
+  })
 
-  return <UserList users={cacheResult.data} />
+  return (
+    <div>
+      <Typography variant="h6">Active Filters:</Typography>
+      {Object.entries(friendlyFilters).map(([key, filter]) => 
+        filter.Value !== null && (
+          <Chip 
+            key={key}
+            label={`${key}: ${filter.Label}`}
+            onDelete={() => {
+              // Handle cascading resets
+              if (key === 'universityId') {
+                setFilterModel(prev => ({ ...prev, universityId: null, facultyId: null, courseId: null }))
+              } else if (key === 'facultyId') {
+                setFilterModel(prev => ({ ...prev, facultyId: null, courseId: null }))
+              } else {
+                setFilterModel(prev => ({ ...prev, [key]: null }))
+              }
+            }}
+          />
+        )
+      )}
+    </div>
+  )
+}
+```
+
+### Simplified University-Faculty-Course Pattern
+
+For the common cascading pattern, use the simplified hook:
+
+```tsx
+import { useUniversityFacultyCourseFriendlyFilter } from '@/core/hooks/tanstack'
+
+const SimplifiedCascadingFilter = () => {
+  const filterModel = {
+    universityId: 'univ-123',
+    facultyId: 'fac-456', 
+    courseId: null,
+    isActive: true
+  }
+
+  const friendlyFilters = useUniversityFacultyCourseFriendlyFilter(
+    filterModel,
+    {
+      university: 'universityId',
+      faculty: 'facultyId',
+      course: 'courseId'
+    },
+    {
+      universities: (unis: University[]) => unis.map(u => ({ Value: u.id, Label: u.name })),
+      faculties: (faculties: Faculty[]) => faculties.map(f => ({ Value: f.id, Label: f.name })),
+      courses: (courses: Course[]) => courses.map(c => ({ Value: c.id, Label: c.name }))
+    },
+    {
+      isActive: { type: 'boolean' }
+    }
+  )
+
+  // Use friendlyFilters...
+}
+```
+
+### Integration with Filter System
+
+```tsx
+import { useFriendlyFilterWithCache } from '@/core/hooks/tanstack'
+
+interface ProgramFilter {
+  universityId: string | null
+  facultyId: string | null  
+  isActive: boolean | null
+  searchTerm: string | null
+}
+
+const ProgramFilterDisplay = () => {
+  const [filter, setFilter] = useState<ProgramFilter>({
+    universityId: 'univ-123',
+    facultyId: null,
+    isActive: true,
+    searchTerm: 'computer science'
+  })
+
+  // Get friendly labels with cached university data
+  const friendlyFilters = useFriendlyFilterWithCache(
+    filter,
+    'universityId',
+    {
+      queryKey: ['universities', 'list'],
+      dataSelector: (response: ApiResponse<University[]>) => 
+        response.data.map(u => ({ 
+          Value: u.id, 
+          Label: u.name 
+        }))
+    },
+    {
+      facultyId: { 
+        type: 'dropdown', 
+        dataSource: facultyOptions 
+      },
+      isActive: { 
+        type: 'boolean',
+        booleanLabels: {
+          true: 'Active Programs',
+          false: 'Inactive Programs', 
+          null: 'All Programs'
+        }
+      },
+      searchTerm: { 
+        type: 'string' 
+      }
+    }
+  )
+
+  return (
+    <div>
+      <Typography variant="h6">Active Filters:</Typography>
+      {Object.entries(friendlyFilters).map(([key, filterValue]) => 
+        filterValue.Value !== null && (
+          <Chip 
+            key={key}
+            label={`${key}: ${filterValue.Label}`}
+            onDelete={() => setFilter(prev => ({ ...prev, [key]: null }))}
+          />
+        )
+      )}
+    </div>
+  )
+}
+```
+
+## TypeScript Support & IntelliSense
+
+All hooks provide full type safety and excellent IDE support:
+
+```tsx
+// Define your API response types
+interface University {
+  id: string
+  name: string
+  code: string
+  country: string
+}
+
+interface ApiResponse<T> {
+  data: T
+  meta: {
+    total: number
+    page: number
+  }
+}
+
+// Use with full type safety
+const TypeSafeExample = () => {
+  // Full type inference for the data selector
+  const { data, isAvailable } = useCacheDataResolver<ApiResponse<University[]>>({
+    queryKey: ['universities', 'all'],
+    dataSelector: (response) => {
+      // TypeScript knows response is ApiResponse<University[]>
+      return response.data.map(university => ({
+        // IDE will autocomplete university properties
+        Value: university.id,
+        Label: `${university.name} - ${university.code}`
+      }))
+    },
+    enabled: true
+  })
+
+  // TypeScript ensures ComboBoxItem structure
+  return (
+    <Autocomplete
+      options={data} // Type: ComboBoxItem[]
+      getOptionLabel={(option) => option.Label} // Autocomplete works
+      getOptionKey={(option) => option.Value}   // Type-safe access
+    />
+  )
+}
+
+// Filter model with strict typing
+interface StrictProgramFilter {
+  readonly universityId: string | null
+  readonly facultyId: string | null
+  readonly courseLevel: 'undergraduate' | 'graduate' | null
+  readonly isActive: boolean | null
+}
+
+const StrictlyTypedFilter = () => {
+  const [filter, setFilter] = useState<StrictProgramFilter>({
+    universityId: null,
+    facultyId: null,
+    courseLevel: null,
+    isActive: null
+  })
+
+  // Full type safety with filter keys
+  const friendlyFilter = useFriendlyFilterWithCache(
+    filter,
+    'universityId' as const, // TypeScript ensures this key exists in filter
+    {
+      queryKey: ['universities', 'dropdown'] as const,
+      dataSelector: (unis: University[]) => unis.map(u => ({
+        Value: u.id,
+        Label: u.name
+      }))
+    },
+    {
+      facultyId: { type: 'dropdown' },
+      courseLevel: { 
+        type: 'dropdown',
+        dataSource: [
+          { Value: 'undergraduate', Label: 'Undergraduate' },
+          { Value: 'graduate', Label: 'Graduate' }
+        ]
+      },
+      isActive: { type: 'boolean' }
+    }
+  )
+
+  // Return type is FriendlyFilterRecord<StrictProgramFilter>
+  return (
+    <div>
+      {/* TypeScript knows all possible keys */}
+      <Chip label={friendlyFilter.universityId.Label} />
+      <Chip label={friendlyFilter.courseLevel.Label} />
+    </div>
+  )
 }
 ```
 
 ## Best Practices
 
-### 1. Query Key Consistency
-
-Use consistent query key patterns across your application:
-
+### 1. Use const assertions for query keys
 ```tsx
-// Good: Consistent structure
-['entity', 'action', ...params]
-['users', 'list', { page: 1, limit: 10 }]
-['users', 'detail', userId]
-['posts', 'list', { category: 'tech' }]
+// Good: Prevents accidental mutations and improves type inference
+const { data } = useCacheDataResolver({
+  queryKey: ['universities', 'active'] as const
+})
 
-// Avoid: Inconsistent patterns
-['getUsersList', page, limit]
-[userId, 'user']
-['posts-tech-category']
+// Avoid: Mutable array type
+const { data } = useCacheDataResolver({
+  queryKey: ['universities', 'active'] 
+})
 ```
 
-### 2. Selective Memoization
-
-Only memoize performance-critical operations:
-
+### 2. Define reusable selector functions
 ```tsx
-const Component = () => {
-  const { data } = useGenericCacheResolver({
-    // Memoize complex query keys
-    queryKey: useMemo(() => ({
-      baseKey: 'users',
-      customKey: buildComplexKey(filters, sorting, pagination)
-    }), [filters, sorting, pagination]),
-    
-    // Memoize expensive selectors
-    selector: useCallback((data: User[]) => 
-      expensiveDataTransformation(data)
-    , [dependencies])
+// Create typed selector functions
+const selectUniversityOptions = (response: ApiResponse<University[]>): ComboBoxItem[] =>
+  response.data.map(university => ({
+    Value: university.id,
+    Label: `${university.name} (${university.code})`
+  }))
+
+// Reuse across components
+const UniversityDropdown = () => {
+  const { data } = useCacheDataResolver({
+    queryKey: ['universities', 'all'] as const,
+    dataSelector: selectUniversityOptions
   })
 }
 ```
 
-### 3. Error Handling
-
-Implement proper error handling for cache operations:
-
+### 3. Use discriminated unions for field types
 ```tsx
-const CacheWithErrorHandling = () => {
-  const { prefetchCache } = useGenericCacheManager({
-    onError: (error) => {
-      console.error('Cache operation failed:', error)
-      // Report to error tracking service
-    }
-  })
-
-  const handlePrefetch = async (key: string[]) => {
-    try {
-      await prefetchCache(key, fetcherFunction)
-    } catch (error) {
-      // Handle specific prefetch errors
-      showErrorToast('Failed to preload data')
-    }
-  }
+interface FilterField<T = any> {
+  type: 'dropdown' | 'boolean' | 'string' | 'date'
+  value: T
 }
+
+interface DropdownField extends FilterField<string | null> {
+  type: 'dropdown'
+  options: ComboBoxItem[]
+}
+
+interface BooleanField extends FilterField<boolean | null> {
+  type: 'boolean'
+  labels?: { true: string, false: string, null: string }
+}
+
+type TypedFilterField = DropdownField | BooleanField
 ```
-
-### 4. Memory Management
-
-Be mindful of cache size and cleanup:
-
-```tsx
-const MemoryEfficientCache = () => {
-  const { removeCache, getAllCacheKeys } = useGenericCacheManager({
-    gcTime: 5 * 60 * 1000 // Short garbage collection time
-  })
-
-  // Cleanup old cache entries
-  useEffect(() => {
-    const cleanup = () => {
-      const allKeys = getAllCacheKeys()
-      const oldKeys = allKeys.filter(isOldCacheKey)
-      oldKeys.forEach(removeCache)
-    }
-
-    const interval = setInterval(cleanup, 10 * 60 * 1000) // Every 10 minutes
-    return () => clearInterval(interval)
-  }, [])
-}
-```
-
-## Integration with Existing Patterns
-
-These hooks integrate seamlessly with the project's existing patterns:
-
-### With Filter System
-
-```tsx
-// Combine with filter resolver hooks
-const FilteredListWithCache = () => {
-  const { friendlyFilter } = useGenericFriendlyFilterResolver(filterConfig)
-  const { data } = useGenericCacheResolver({
-    queryKey: {
-      baseKey: 'filteredData',
-      customKey: ['data', JSON.stringify(friendlyFilter)]
-    }
-  })
-
-  return <DataList data={data} filters={friendlyFilter} />
-}
-```
-
-### With RTK Query
-
-```tsx
-// Use alongside existing RTK Query setup
-const HybridCacheComponent = () => {
-  // RTK Query for server state
-  const { data: serverData } = useGetUsersQuery()
-  
-  // TanStack cache for derived/computed state
-  const { setCache } = useGenericCacheManager()
-  
-  useEffect(() => {
-    if (serverData) {
-      // Cache processed data
-      const processedData = processUserData(serverData)
-      setCache(['users', 'processed'], processedData)
-    }
-  }, [serverData])
-}
-```
-
-## TypeScript Support
-
-All hooks are fully typed with generic support:
-
-```tsx
-interface User {
-  id: string
-  name: string
-  email: string
-}
-
-// Type-safe cache operations
-const TypedCacheExample = () => {
-  const { data } = useGenericCacheResolver<{userId: string}, User>({
-    queryKey: { baseKey: 'users' },
-    selector: (user: User) => user.name // Type-safe selector
-  })
-
-  const { setCache } = useGenericCacheManager<User>()
-  
-  // Type-safe cache operations
-  setCache(['users', '123'], {
-    id: '123',
-    name: 'John Doe',
-    email: 'john@example.com'
-  })
-}
-```
-
-This documentation provides comprehensive coverage of the TanStack Query cache management utilities, following the same patterns and conventions as the existing filter resolver system in your codebase.

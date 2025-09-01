@@ -1,40 +1,35 @@
 /**
- * TanStack Query Cache Management Utilities
+ * TanStack Query Cache Data Access Utilities
  * 
- * This module provides a comprehensive set of hooks for managing TanStack Query cache
- * following the same patterns as the filter resolver system. These utilities offer:
- * 
- * - Generic cache resolution and data retrieval
- * - Cache management operations (invalidate, remove, set, prefetch)
- * - Cache synchronization between different query keys
- * - Performance optimizations with memoization
+ * This module provides hooks for accessing cached data from TanStack Query
+ * specifically for use with the filter resolver system. These utilities support
+ * both single dropdown fields and cascading dropdown patterns.
  */
 
-// Cache resolution hooks
+// Basic cache data access hooks
 export {
-  useGenericCacheResolver,
-  useSimpleCacheResolver,
-  useGenericCacheResolverWithMemoization,
-  type CacheKeyConfig,
-  type GenericCacheResolverConfig,
-  type CacheResolverResult
-} from './useGenericCacheResolver'
+  useCacheDataResolver,
+  type CacheDataConfig,
+  type CacheDataResult
+} from './useCacheDataResolver'
 
-// Cache management hooks
+// Single field friendly filter with cache integration
 export {
-  useGenericCacheManager,
-  useBatchCacheManager,
-  type CacheOperationConfig,
-  type GenericCacheManagerConfig,
-  type CacheManagerResult
-} from './useGenericCacheManager'
+  useFriendlyFilterWithCache
+} from './useFriendlyFilterWithCache'
 
-// Cache synchronization hooks
+// Cascading dropdown cache resolution
 export {
-  useGenericCacheSync,
-  useSimpleCacheSync,
-  useGenericCacheSyncWithMemoization,
-  type CacheSyncConfig,
-  type GenericCacheSyncConfig,
-  type CacheSyncResult
-} from './useGenericCacheSync'
+  useCascadingCacheDataResolver,
+  useUniversityFacultyCourseResolver,
+  type CascadingFieldConfig,
+  type CascadingCacheConfig,
+  type CascadingCacheResult
+} from './useCascadingCacheDataResolver'
+
+// Cascading friendly filter with cache integration
+export {
+  useFriendlyFilterWithCascadingCache,
+  useUniversityFacultyCourseFriendlyFilter,
+  type FriendlyFilterWithCascadingCacheConfig
+} from './useFriendlyFilterWithCascadingCache'
