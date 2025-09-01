@@ -42,7 +42,8 @@ src/
 │       ├── pages/         # Module page components
 │       ├── store/         # Module state (API + slices)
 │       ├── types/         # Module type definitions
-│       └── schema/        # Module validation schemas
+│       ├── schema/        # Module validation schemas
+│       └── utils/         # Module-specific utilities (transforms, helpers)
 ├── store/                 # Global store configuration and shared APIs
 ├── components/            # Shared/global components
 ├── hooks/                 # Shared/global hooks
@@ -90,6 +91,11 @@ The application includes a sophisticated filter system with two main approaches:
 - Support for validation errors and general API errors
 - Field-level error extraction for forms
 
+**Data Transformation** (`src/core/api/transforms.ts`):
+- Generic `sanitizeFormData` utility for form-to-entity transformations
+- Handles common patterns: primary key defaults, empty string to null conversion
+- Type-safe with generic constraints for reusability across modules
+
 ### Component Patterns
 
 **Layout**: AppShell pattern with Sidebar and TopNavigation
@@ -106,6 +112,8 @@ The application includes a sophisticated filter system with two main approaches:
 - Error handling should use the centralized `useApiError` hook
 - Type definitions should be co-located with their respective modules
 - Use the established folder structure for new features
+- For form-to-entity transformations, use the `sanitizeFormData` utility from `src/core/api/transforms.ts`
+- Module-specific transformers should be placed in `modules/{module}/utils/transforms.ts`
 
 ## Environment Setup
 
