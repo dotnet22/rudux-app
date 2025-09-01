@@ -5,6 +5,7 @@ import { toast } from 'sonner'
 import { useUpdateAcademicYearMutation } from '../store/api/academicYearsApi'
 import { academicYearFormSchema, type AcademicYearFormData } from '../schema'
 import type { AcademicYear } from '../types/academicYear'
+import { transformAcademicYearFormData } from '../utils/transforms'
 
 interface UseAcademicYearFormOptions {
   initialData?: AcademicYear
@@ -43,11 +44,7 @@ export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearF
 
   const onSubmit = async (data: AcademicYearFormData) => {
     try {
-      const academicYearData: AcademicYear = {
-        ...data,
-        AcademicYearPK: data.AcademicYearPK || '',
-        Description: data.Description || null,
-      }
+      const academicYearData = transformAcademicYearFormData(data)
 
       const result = await updateAcademicYear(academicYearData).unwrap()
 

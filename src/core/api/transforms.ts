@@ -54,3 +54,37 @@ export const transformToComboBox = transformApiResponse(
 export const noTransform = <T>(response: unknown): T => 
   extractApiData(response as ApiResponse<T> | T)
 
+/**
+ * Generic form data sanitizer that handles common form-to-entity transformations
+ */
+export const sanitizeFormData = <T extends Record<string, unknown>>(
+  formData: T,
+  options: {
+    pkField?: keyof T
+    pkDefault?: string
+    emptyStringToNull?: (keyof T)[]
+  } = {}
+): T => {
+  const {
+    pkField,
+    pkDefault = '',
+    emptyStringToNull = []
+  } = options
+
+  const sanitized = { ...formData }
+
+  // Handle primary key default
+  if (pkField && !sanitized[pkField]) {
+    sanitized[pkField] = pkDefault as T[keyof T]
+  }
+
+  // Convert empty strings to null for specified fields
+  emptyStringToNull.forEach(field => {
+    if (sanitized[field] === '') {
+      sanitized[field] = null as T[keyof T]
+    }
+  })
+
+  return sanitized
+}
+
