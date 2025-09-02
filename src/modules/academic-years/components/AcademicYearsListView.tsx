@@ -1,107 +1,36 @@
-import { useEffect, useState } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import {
   DataGrid,
   type GridColDef,
-  type GridPaginationModel,
-  type GridSortModel,
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
-import { useNavigate } from 'react-router'
-import { toast } from 'sonner'
-import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation } from '../store/api/academicYearsApi'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
-import {
-  selectAllAcademicYears,
-  selectAcademicYearsState,
-  setPage,
-  setPageSize,
-  setSorting,
-  setAcademicYears,
-  setLoading,
-} from '../store/slices/academicYearsSlice'
-import { useApiError } from '../../../store/api/errorHandling'
+import { useAcademicYearsList } from '../hooks/useAcademicYearsList'
 import type { AcademicYear } from '../types/academicYear'
 
 const ListView = () => {
-  const dispatch = useDispatch()
-  const navigate = useNavigate()
-  const academicYears = useSelector(selectAllAcademicYears)
-  const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading } = useSelector(selectAcademicYearsState)
-  const { processError } = useApiError()
-
-  const [deleteDialog, setDeleteDialog] = useState<{
-    open: boolean
-    academicYear: AcademicYear | null
-  }>({
-    open: false,
-    academicYear: null,
-  })
-
-  const [deleteAcademicYear, { isLoading: isDeleting, error: deleteError }] = useDeleteAcademicYearMutation()
-
-  const requestPayload = {
-    pageOffset: currentPage,
+  const {
+    academicYears,
+    currentPage,
     pageSize,
-    sortField,
-    sortOrder,
-    filterModel: {
-      ProgramName: "dd",
-      UniversityPK: "oxqFAadpCZzPLp8-72Ux3Q",
-      CoursePK: "OeB1sJTFVztnx9ONDok4RQ",
-      FacultyPK: "1yKCWcJvKfokc5MlH6jWPA",
-      SpecializationPK: "u725SYy6D5tncoEbPIOpHw"
-    },
-    ProgramName: "dd",
-    UniversityPK: "oxqFAadpCZzPLp8-72Ux3Q",
-    CoursePK: "OeB1sJTFVztnx9ONDok4RQ",
-    FacultyPK: "1yKCWcJvKfokc5MlH6jWPA",
-    SpecializationPK: "u725SYy6D5tncoEbPIOpHw"
-  }
-
-  const { data, error, isLoading, refetch } = useGetAcademicYearsQuery(requestPayload)
-
-  const handleDeleteClick = (academicYear: AcademicYear) => {
-    setDeleteDialog({
-      open: true,
-      academicYear,
-    })
-  }
-
-  const handleDeleteClose = () => {
-    setDeleteDialog({
-      open: false,
-      academicYear: null,
-    })
-  }
-
-  const handleDeleteConfirm = async () => {
-    if (!deleteDialog.academicYear) return
-
-    try {
-      await deleteAcademicYear(deleteDialog.academicYear.AcademicYearPK).unwrap()
-      toast.success(`Academic Year "${deleteDialog.academicYear.AcademicYearName}" has been deleted successfully`)
-      handleDeleteClose()
-      refetch()
-    } catch (error) {
-      const processedError = processError(error)
-      toast.error(`Failed to delete academic year: ${processedError.title || 'Unknown error'}`)
-    }
-  }
-
-  useEffect(() => {
-    dispatch(setLoading(isLoading))
-  }, [dispatch, isLoading])
-
-  useEffect(() => {
-    if (data) {
-      const mappedData = data.Data.map((item: AcademicYear) => ({ ...item, id: item.AcademicYearPK }))
-      dispatch(setAcademicYears({ data: mappedData, totalRecords: data.Total }))
-      dispatch(setLoading(false))
-    }
-  }, [dispatch, data])
+    totalRecords,
+    loading,
+    deleteDialog,
+    isDeleting,
+    error,
+    deleteError,
+    handleDeleteClick,
+    handleDeleteClose,
+    handleDeleteConfirm,
+    handlePaginationModelChange,
+    handleSortModelChange,
+    handleNavigateToView,
+    handleNavigateToEdit,
+    handleNavigateToNew,
+    refetch,
+    processError,
+  } = useAcademicYearsList()
 
   const columns: GridColDef[] = [
     {
@@ -162,7 +91,7 @@ const ListView = () => {
               variant="outlined"
               size="small"
               startIcon={<Visibility />}
-              onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/view`)}
+              onClick={() => handleNavigateToView(params.row.AcademicYearPK)}
             >
               View
             </Button>
@@ -170,7 +99,7 @@ const ListView = () => {
               variant="outlined"
               size="small"
               startIcon={<Edit />}
-              onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/edit`)}
+              onClick={() => handleNavigateToEdit(params.row.AcademicYearPK)}
             >
               Edit
             </Button>
@@ -189,27 +118,6 @@ const ListView = () => {
     },
   ]
 
-  const handlePaginationModelChange = (model: GridPaginationModel) => {
-    if (model.page !== currentPage) {
-      dispatch(setLoading(true))
-      dispatch(setPage(model.page))
-    }
-    if (model.pageSize !== pageSize) {
-      dispatch(setLoading(true))
-      dispatch(setPageSize(model.pageSize))
-    }
-  }
-
-  const handleSortModelChange = (model: GridSortModel) => {
-    if (model.length > 0) {
-      const sort = model[0]
-      dispatch(setLoading(true))
-      dispatch(setSorting({ field: sort.field, order: sort.sort as 'asc' | 'desc' | null }))
-    } else {
-      dispatch(setLoading(true))
-      dispatch(setSorting({ field: null, order: null }))
-    }
-  }
 
   if (error) {
     const processedError = processError(error)
@@ -254,7 +162,7 @@ const ListView = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => navigate('/academic-years/new')}
+          onClick={handleNavigateToNew}
         >
           Add Academic Year
         </Button>
