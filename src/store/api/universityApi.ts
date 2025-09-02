@@ -11,7 +11,13 @@ export const universityApi = createApi({
     getUniversities: builder.query<University[], void>({
       query: () => '/INS_University/comboBox',
       transformResponse: noTransform,
-      providesTags: ['University'],
+      providesTags: (result) =>
+        result?.length
+          ? [
+              { type: 'University', id: 'LIST' },
+              ...result.map((item) => ({ type: 'University', id: item.PK_UniversityID })),
+            ]
+          : [{ type: 'University', id: 'LIST' }],
     }),
   }),
 })

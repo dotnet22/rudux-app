@@ -15,7 +15,13 @@ export const academicYearsApi = createApi({
       }),
       // Remove transform since API doesn't follow expected wrapper format
       // transformResponse: noTransform,
-      providesTags: ['AcademicYear'],
+      providesTags: (result) => 
+        result?.data?.length 
+          ? [
+              { type: 'AcademicYear', id: 'LIST' },
+              ...result.data.map((item) => ({ type: 'AcademicYear', id: item.PK_AcademicYearID })),
+            ]
+          : [{ type: 'AcademicYear', id: 'LIST' }],
     }),
     getAcademicYearById: builder.query<AcademicYear, string>({
       query: (id) => ({
@@ -37,20 +43,21 @@ export const academicYearsApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['AcademicYear'],
+      invalidatesTags: [{ type: 'AcademicYear', id: 'LIST' }],
     }),
     deleteAcademicYear: builder.mutation<OperationResponse, string>({
       query: (id) => ({
         url: `/MST_AcademicYear/delete/${id}`,
         method: 'DELETE',
       }),
-      invalidatesTags: ['AcademicYear'],
+      invalidatesTags: [{ type: 'AcademicYear', id: 'LIST' }],
     }),
     getAcademicYearInsertTemplate: builder.query<AcademicYear, void>({
       query: () => ({
         url: '/MST_AcademicYear/insert',
         method: 'GET',
       }),
+      providesTags: [{ type: 'AcademicYear', id: 'TEMPLATE' }],
     }),
     createAcademicYear: builder.mutation<OperationResponse, AcademicYear>({
       query: (body) => ({
@@ -58,7 +65,7 @@ export const academicYearsApi = createApi({
         method: 'POST',
         body,
       }),
-      invalidatesTags: ['AcademicYear'],
+      invalidatesTags: [{ type: 'AcademicYear', id: 'LIST' }],
     }),
   }),
 })

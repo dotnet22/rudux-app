@@ -21,7 +21,13 @@ export const programsApi = createApi({
         }
       },
       transformResponse: noTransform,
-      providesTags: ['Program'],
+      providesTags: (result) =>
+        result?.data?.length
+          ? [
+              { type: 'Program', id: 'LIST' },
+              ...result.data.map((item) => ({ type: 'Program', id: item.PK_ProgramID })),
+            ]
+          : [{ type: 'Program', id: 'LIST' }],
     }),
   }),
 })
