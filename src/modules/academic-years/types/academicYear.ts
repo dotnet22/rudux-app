@@ -11,6 +11,13 @@ export interface AcademicYear {
   Description?: string | null
 }
 
+export interface AcademicYearDetails extends AcademicYear {
+  CreatedByUserName: string
+  ModifiedByUserName: string
+  Created: string
+  Modified: string
+}
+
 export interface OperationResponse {
   Id?: string
   RowsAffected: number

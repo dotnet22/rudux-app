@@ -8,7 +8,7 @@ import {
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
-import { Add, Edit } from '@mui/icons-material'
+import { Add, Edit, Visibility } from '@mui/icons-material'
 import { useNavigate } from 'react-router'
 import { useGetAcademicYearsQuery } from '../store/api/academicYearsApi'
 import {
@@ -112,19 +112,29 @@ const ListView = () => {
     {
       field: 'actions',
       headerName: 'Actions',
-      minWidth: 120,
+      minWidth: 200,
       flex: 1,
       sortable: false,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
         return (
-          <Button
-            variant="outlined"
-            size="small"
-            startIcon={<Edit />}
-            onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/edit`)}
-          >
-            Edit
-          </Button>
+          <Stack direction="row" spacing={1}>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Visibility />}
+              onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/view`)}
+            >
+              View
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<Edit />}
+              onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/edit`)}
+            >
+              Edit
+            </Button>
+          </Stack>
         )
       },
     },

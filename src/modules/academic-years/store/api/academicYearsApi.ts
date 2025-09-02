@@ -1,6 +1,6 @@
 import { createApi } from '@reduxjs/toolkit/query/react'
 import { baseQuery } from '../../../../store/api/baseQuery'
-import type { AcademicYearListRequest, AcademicYearListResponse, AcademicYear, OperationResponse } from '../../types/academicYear'
+import type { AcademicYearListRequest, AcademicYearListResponse, AcademicYear, AcademicYearDetails, OperationResponse } from '../../types/academicYear'
 
 export const academicYearsApi = createApi({
   reducerPath: 'academicYearsApi',
@@ -24,6 +24,13 @@ export const academicYearsApi = createApi({
       }),
       providesTags: (_, __, id) => [{ type: 'AcademicYear', id }],
     }),
+    getAcademicYearView: builder.query<AcademicYearDetails, string>({
+      query: (id) => ({
+        url: `/MST_AcademicYear/view/${id}`,
+        method: 'GET',
+      }),
+      providesTags: (_, __, id) => [{ type: 'AcademicYear', id }],
+    }),
     updateAcademicYear: builder.mutation<OperationResponse, AcademicYear>({
       query: (body) => ({
         url: '/MST_AcademicYear/update',
@@ -35,4 +42,4 @@ export const academicYearsApi = createApi({
   }),
 })
 
-export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useUpdateAcademicYearMutation } = academicYearsApi
+export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery, useUpdateAcademicYearMutation } = academicYearsApi
