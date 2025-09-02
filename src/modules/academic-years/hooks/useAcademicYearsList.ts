@@ -13,7 +13,7 @@ import {
   setAcademicYears,
   setLoading,
 } from '../store/slices/academicYearsSlice'
-import { useApiError } from '../../../store/api/errorHandling'
+import { useApiError } from '../../../core/api/error-handling'
 import type { AcademicYear } from '../types/academicYear'
 
 export const useAcademicYearsList = () => {

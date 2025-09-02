@@ -74,7 +74,7 @@ const programsSlice = createSlice({
   },
 })
 
-export const { setPage, setPageSize, setSorting, setPrograms, setLoading, setFilters, setFriendlyFilters } = programsSlice.actions
+export const { setPage, setPageSize, setSorting, setPrograms, setLoading, setFilters, setFriendlyFilters, } = programsSlice.actions
 
 export const {
   selectAll: selectAllPrograms,

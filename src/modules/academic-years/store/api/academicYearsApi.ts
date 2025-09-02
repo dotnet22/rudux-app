@@ -46,7 +46,21 @@ export const academicYearsApi = createApi({
       }),
       invalidatesTags: ['AcademicYear'],
     }),
+    getAcademicYearInsertTemplate: builder.query<AcademicYear, void>({
+      query: () => ({
+        url: '/MST_AcademicYear/insert',
+        method: 'GET',
+      }),
+    }),
+    createAcademicYear: builder.mutation<OperationResponse, AcademicYear>({
+      query: (body) => ({
+        url: '/MST_AcademicYear/insert',
+        method: 'POST',
+        body,
+      }),
+      invalidatesTags: ['AcademicYear'],
+    }),
   }),
 })
 
-export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery, useUpdateAcademicYearMutation, useDeleteAcademicYearMutation } = academicYearsApi
+export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery, useUpdateAcademicYearMutation, useDeleteAcademicYearMutation, useGetAcademicYearInsertTemplateQuery, useCreateAcademicYearMutation } = academicYearsApi

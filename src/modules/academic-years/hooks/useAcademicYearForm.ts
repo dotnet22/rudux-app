@@ -1,11 +1,11 @@
 import { useEffect, useCallback } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'sonner'
-import { useUpdateAcademicYearMutation } from '../store/api/academicYearsApi'
+import { useUpdateAcademicYearMutation, useCreateAcademicYearMutation } from '../store/api/academicYearsApi'
 import { academicYearFormSchema, type AcademicYearFormData } from '../schema'
 import type { AcademicYear } from '../types/academicYear'
 import { transformAcademicYearFormData } from '../utils/transforms'
+import { useFormErrorHandler } from '../../../core/hooks/useFormErrorHandler'
 
 interface UseAcademicYearFormOptions {
   initialData?: AcademicYear
@@ -13,14 +13,30 @@ interface UseAcademicYearFormOptions {
 }
 
 export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearFormOptions = {}) => {
-  const [updateAcademicYear, { isLoading }] = useUpdateAcademicYearMutation()
+  const [updateAcademicYear, { isLoading: isUpdating }] = useUpdateAcademicYearMutation()
+  const [createAcademicYear, { isLoading: isCreating }] = useCreateAcademicYearMutation()
+  
+  const isLoading = isUpdating || isCreating
+  const isEditing = !!initialData
 
   const form = useForm<AcademicYearFormData>({
     resolver: zodResolver(academicYearFormSchema),
     defaultValues: getDefaultValues(initialData),
   })
 
-  const { reset } = form
+  const { reset, setError } = form
+  
+  const { handleSuccess, handleError } = useFormErrorHandler({
+    setError,
+    successMessage: {
+      create: 'Academic year created successfully',
+      update: 'Academic year updated successfully'
+    },
+    errorMessage: {
+      noChanges: 'No changes were made to the academic year',
+      general: 'Failed to save academic year. Please try again.'
+    }
+  })
 
   useEffect(() => {
     if (initialData) {
@@ -46,25 +62,18 @@ export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearF
     try {
       const academicYearData = transformAcademicYearFormData(data)
 
-      const result = await updateAcademicYear(academicYearData).unwrap()
+      const result = isEditing 
+        ? await updateAcademicYear(academicYearData).unwrap()
+        : await createAcademicYear(academicYearData).unwrap()
 
-      if (result.RowsAffected > 0) {
-        toast.success(
-          initialData
-            ? 'Academic year updated successfully'
-            : 'Academic year created successfully'
-        )
+      const success = handleSuccess(isEditing, result.RowsAffected)
+      if (success) {
         onSuccess?.()
-      } else {
-        toast.error('No changes were made to the academic year')
       }
     } catch (error) {
-      console.error('Error saving academic year:', error)
-      toast.error('Failed to save academic year. Please try again.')
+      handleError(error)
     }
   }
-
-  const isEditing = !!initialData
 
   return {
     form,
