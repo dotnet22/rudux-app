@@ -11,7 +11,6 @@ import {
   setPageSize,
   setSorting,
   setAcademicYears,
-  setLoading,
 } from '../store/slices/academicYearsSlice'
 import { useApiError } from '../../../core/api/error-handling'
 import type { AcademicYear } from '../types/academicYear'
@@ -20,7 +19,7 @@ export const useAcademicYearsList = () => {
   const dispatch = useDispatch()
   const navigate = useNavigate()
   const academicYears = useSelector(selectAllAcademicYears)
-  const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading } = useSelector(selectAcademicYearsState)
+  const { currentPage, pageSize, totalRecords, sortField, sortOrder } = useSelector(selectAcademicYearsState)
   const { processError } = useApiError()
 
   const [deleteDialog, setDeleteDialog] = useState<{
@@ -84,11 +83,9 @@ export const useAcademicYearsList = () => {
 
   const handlePaginationModelChange = useCallback((model: GridPaginationModel) => {
     if (model.page !== currentPage) {
-      dispatch(setLoading(true))
       dispatch(setPage(model.page))
     }
     if (model.pageSize !== pageSize) {
-      dispatch(setLoading(true))
       dispatch(setPageSize(model.pageSize))
     }
   }, [dispatch, currentPage, pageSize])
@@ -96,13 +93,20 @@ export const useAcademicYearsList = () => {
   const handleSortModelChange = useCallback((model: GridSortModel) => {
     if (model.length > 0) {
       const sort = model[0]
-      dispatch(setLoading(true))
-      dispatch(setSorting({ field: sort.field, order: sort.sort as 'asc' | 'desc' | null }))
+      const newField = sort.field
+      const newOrder = sort.sort as 'asc' | 'desc' | null
+      
+      // Only update if sorting actually changed
+      if (newField !== sortField || newOrder !== sortOrder) {
+        dispatch(setSorting({ field: newField, order: newOrder }))
+      }
     } else {
-      dispatch(setLoading(true))
-      dispatch(setSorting({ field: null, order: null }))
+      // Only clear sorting if there was sorting before
+      if (sortField !== null || sortOrder !== null) {
+        dispatch(setSorting({ field: null, order: null }))
+      }
     }
-  }, [dispatch])
+  }, [dispatch, sortField, sortOrder])
 
   const handleNavigateToView = useCallback((academicYearPK: string) => {
     navigate(`/academic-years/${academicYearPK}/view`)
@@ -116,10 +120,6 @@ export const useAcademicYearsList = () => {
     navigate('/academic-years/new')
   }, [navigate])
 
-  useEffect(() => {
-    dispatch(setLoading(isLoading))
-  }, [dispatch, isLoading])
-
   const mappedData = useMemo(() => {
     if (!data?.Data) return []
     return data.Data.map((item: AcademicYear) => ({ ...item, id: item.AcademicYearPK }))
@@ -128,7 +128,6 @@ export const useAcademicYearsList = () => {
   useEffect(() => {
     if (data && mappedData.length > 0) {
       dispatch(setAcademicYears({ data: mappedData, totalRecords: data.Total }))
-      dispatch(setLoading(false))
     }
   }, [dispatch, data, mappedData])
 
@@ -138,7 +137,7 @@ export const useAcademicYearsList = () => {
     currentPage,
     pageSize,
     totalRecords,
-    loading,
+    loading: isLoading,
     deleteDialog,
     isDeleting,
     
