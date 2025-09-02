@@ -164,3 +164,6 @@ The application includes a sophisticated filter system with multiple approaches:
 - Hooks available in `src/core/hooks/tanstack/` for cache-based filtering
 
 The application supports both Redux Toolkit (primary) and TanStack Query (optional) approaches for state management and caching, with specialized hooks for integrating TanStack Query cache data with the existing filter system.
+- Instructions while testing app using playwright-mcp
+dont' open browser in incognito mode, else you won' get access to jwt token stored in localStorage
+dont' open app on port other than 8081, else you will get CORS error

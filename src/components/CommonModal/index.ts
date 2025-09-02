@@ -1,2 +1,3 @@
 export * from "./CommonModal";
-export * from "./types"
+export * from "./types";
+export * from "./useCommonModal";
