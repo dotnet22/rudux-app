@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   DataGrid,
@@ -8,9 +8,11 @@ import {
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
-import { Add, Edit, Visibility } from '@mui/icons-material'
+import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
 import { useNavigate } from 'react-router'
-import { useGetAcademicYearsQuery } from '../store/api/academicYearsApi'
+import { toast } from 'sonner'
+import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation } from '../store/api/academicYearsApi'
+import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 import {
   selectAllAcademicYears,
   selectAcademicYearsState,
@@ -29,6 +31,16 @@ const ListView = () => {
   const academicYears = useSelector(selectAllAcademicYears)
   const { currentPage, pageSize, totalRecords, sortField, sortOrder, loading } = useSelector(selectAcademicYearsState)
   const { processError } = useApiError()
+
+  const [deleteDialog, setDeleteDialog] = useState<{
+    open: boolean
+    academicYear: AcademicYear | null
+  }>({
+    open: false,
+    academicYear: null,
+  })
+
+  const [deleteAcademicYear, { isLoading: isDeleting, error: deleteError }] = useDeleteAcademicYearMutation()
 
   const requestPayload = {
     pageOffset: currentPage,
@@ -50,6 +62,34 @@ const ListView = () => {
   }
 
   const { data, error, isLoading, refetch } = useGetAcademicYearsQuery(requestPayload)
+
+  const handleDeleteClick = (academicYear: AcademicYear) => {
+    setDeleteDialog({
+      open: true,
+      academicYear,
+    })
+  }
+
+  const handleDeleteClose = () => {
+    setDeleteDialog({
+      open: false,
+      academicYear: null,
+    })
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!deleteDialog.academicYear) return
+
+    try {
+      await deleteAcademicYear(deleteDialog.academicYear.AcademicYearPK).unwrap()
+      toast.success(`Academic Year "${deleteDialog.academicYear.AcademicYearName}" has been deleted successfully`)
+      handleDeleteClose()
+      refetch()
+    } catch (error) {
+      const processedError = processError(error)
+      toast.error(`Failed to delete academic year: ${processedError.title || 'Unknown error'}`)
+    }
+  }
 
   useEffect(() => {
     dispatch(setLoading(isLoading))
@@ -112,7 +152,7 @@ const ListView = () => {
     {
       field: 'actions',
       headerName: 'Actions',
-      minWidth: 200,
+      minWidth: 280,
       flex: 1,
       sortable: false,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
@@ -133,6 +173,15 @@ const ListView = () => {
               onClick={() => navigate(`/academic-years/${params.row.AcademicYearPK}/edit`)}
             >
               Edit
+            </Button>
+            <Button
+              variant="outlined"
+              size="small"
+              color="error"
+              startIcon={<Delete />}
+              onClick={() => handleDeleteClick(params.row)}
+            >
+              Delete
             </Button>
           </Stack>
         )
@@ -240,6 +289,15 @@ const ListView = () => {
           }}
         />
       </Box>
+
+      <DeleteConfirmationDialog
+        open={deleteDialog.open}
+        onClose={handleDeleteClose}
+        onConfirm={handleDeleteConfirm}
+        academicYear={deleteDialog.academicYear}
+        isDeleting={isDeleting}
+        error={deleteError ? processError(deleteError).title : null}
+      />
     </Paper>
   )
 }

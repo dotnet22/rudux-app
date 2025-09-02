@@ -39,7 +39,14 @@ export const academicYearsApi = createApi({
       }),
       invalidatesTags: ['AcademicYear'],
     }),
+    deleteAcademicYear: builder.mutation<OperationResponse, string>({
+      query: (id) => ({
+        url: `/MST_AcademicYear/delete/${id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['AcademicYear'],
+    }),
   }),
 })
 
-export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery, useUpdateAcademicYearMutation } = academicYearsApi
+export const { useGetAcademicYearsQuery, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery, useUpdateAcademicYearMutation, useDeleteAcademicYearMutation } = academicYearsApi
