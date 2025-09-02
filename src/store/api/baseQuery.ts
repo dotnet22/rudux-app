@@ -2,7 +2,7 @@ import { fetchBaseQuery } from '@reduxjs/toolkit/query/react'
 import type { BaseQueryFn, FetchArgs, FetchBaseQueryError } from '@reduxjs/toolkit/query'
 
 const baseQueryRaw = fetchBaseQuery({
-  baseUrl: import.meta.env.VITE_API_URL || 'https://iqac-api.gnums.co.in/api',
+  baseUrl: import.meta.env.VITE_API_URL || 'http://192.168.1.246:5143/api',
   prepareHeaders: (headers) => {
     const token = localStorage.getItem('authToken')
     if (token) {

@@ -12,8 +12,8 @@ export interface AcademicYear {
 }
 
 export interface OperationResponse {
-  id?: number
-  rowsAffected: number
+  Id?: string
+  RowsAffected: number
 }
 
 export interface FilterModel {

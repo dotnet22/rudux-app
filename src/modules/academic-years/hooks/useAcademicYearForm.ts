@@ -48,7 +48,7 @@ export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearF
 
       const result = await updateAcademicYear(academicYearData).unwrap()
 
-      if (result.rowsAffected > 0) {
+      if (result.RowsAffected > 0) {
         toast.success(
           initialData
             ? 'Academic year updated successfully'

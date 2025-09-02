@@ -9,6 +9,7 @@ const ProgramsPage = () => {
   const filterProps = useProgramsFilter()
   const filterDisplayProps = useProgramsFilterDisplay()
 
+
   return (
     <Box>
       <Typography variant="h4" component="h1" gutterBottom>
