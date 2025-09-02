@@ -15,6 +15,7 @@ const AcademicYearFormPage = () => {
     error,
   } = useGetAcademicYearByIdQuery(id!, {
     skip: !isEditMode,
+    refetchOnMountOrArgChange: true,
   })
 
   const handleSuccess = () => {
