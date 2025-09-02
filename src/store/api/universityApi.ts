@@ -15,7 +15,7 @@ export const universityApi = createApi({
         result?.length
           ? [
               { type: 'University', id: 'LIST' },
-              ...result.map((item) => ({ type: 'University', id: item.PK_UniversityID })),
+              ...result.map((item) => ({ type: 'University', id: item.Value })),
             ]
           : [{ type: 'University', id: 'LIST' }],
     }),

@@ -12,10 +12,10 @@ export const facultyApi = createApi({
       query: (universityId) => `/INS_Faculty/selectComboBoxByUniversityPK/${universityId}`,
       transformResponse: transformToComboBox,
       providesTags: (result, __, universityId) =>
-        result?.data?.length
+        result?.length
           ? [
               { type: 'Faculty', id: `LIST_${universityId}` },
-              ...result.data.map((item) => ({ type: 'Faculty', id: item.value })),
+              ...result.map((item) => ({ type: 'Faculty', id: item.Value })),
             ]
           : [{ type: 'Faculty', id: `LIST_${universityId}` }],
     }),

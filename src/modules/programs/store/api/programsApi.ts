@@ -22,10 +22,10 @@ export const programsApi = createApi({
       },
       transformResponse: noTransform,
       providesTags: (result) =>
-        result?.data?.length
+        result?.Data?.length
           ? [
               { type: 'Program', id: 'LIST' },
-              ...result.data.map((item) => ({ type: 'Program', id: item.PK_ProgramID })),
+              ...result.Data.map((item) => ({ type: 'Program', id: item.ProgramPK })),
             ]
           : [{ type: 'Program', id: 'LIST' }],
     }),
