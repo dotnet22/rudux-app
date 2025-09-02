@@ -92,9 +92,9 @@ The application includes a sophisticated filter system with multiple approaches:
 ### API Integration
 
 **Base Configuration**:
-- Default API URL: `https://api-iqac.darshanums.in/api`
+- Default API URL: `http://192.168.1.246:5143/api`
 - Configurable via `VITE_API_URL` environment variable
-- Bearer token authentication from localStorage
+- Bearer token authentication from localStorage (`authToken`)
 - Comprehensive error handling and logging
 
 **Error Handling** (`src/core/api/error-handling.ts`):
@@ -114,6 +114,16 @@ The application includes a sophisticated filter system with multiple approaches:
 **Forms**: React Hook Form + Zod validation
 **Data Display**: MUI DataGrid for list views
 **Filtering**: Integrated filter components with friendly display
+**Modals**: Generic `CommanModal` component with flexible slot system for any content type
+
+### CommonModal Component
+
+The application includes a flexible modal system (`src/components/CommonModal/`):
+- **Generic Design**: Single modal component that can display any content
+- **Flexible Content**: Supports both `children` prop and slot system (`headerSlot`, `bodySlot`, `footerSlot`)
+- **Render Functions**: Slots can be React elements or functions that receive optional data
+- **Configurable**: Supports custom sizing, close button visibility, escape key handling
+- **Type Safe**: Full TypeScript support with generic data typing
 
 ## Key Conventions
 
@@ -142,12 +152,25 @@ The application includes a sophisticated filter system with multiple approaches:
 - **Data Transformation**: Implement common `dataTransformer` functions that work across all fields
 - **Auto-Detection**: Rely on smart auto-detection for standard field patterns when possible
 
+### Modal Usage Conventions
+- **Generic Content**: Use `CommanModal` with `children` for simple content
+- **Data-Driven**: Pass data via `data` prop and access in render functions
+- **Custom Headers/Footers**: Use `headerSlot`, `footerSlot` with render functions for dynamic content
+- **Form Integration**: Use `hideCloseButton={true}` when forms handle their own close actions
+
 ## Environment Setup
 
 - Node.js project with npm/pnpm
 - TypeScript strict mode enabled
 - ESLint configuration with React and TypeScript rules
 - Vite for build tooling and development server
+
+## Testing Guidelines
+
+### Playwright Testing
+- **Port Requirement**: Always test on port 8081 to avoid CORS errors
+- **Authentication**: Don't use incognito mode - tests require JWT token access from localStorage
+- **Token Storage**: Application uses `authToken` key in localStorage for authentication
 
 ## Key Dependencies
 
@@ -164,6 +187,3 @@ The application includes a sophisticated filter system with multiple approaches:
 - Hooks available in `src/core/hooks/tanstack/` for cache-based filtering
 
 The application supports both Redux Toolkit (primary) and TanStack Query (optional) approaches for state management and caching, with specialized hooks for integrating TanStack Query cache data with the existing filter system.
-- Instructions while testing app using playwright-mcp
-dont' open browser in incognito mode, else you won' get access to jwt token stored in localStorage
-dont' open app on port other than 8081, else you will get CORS error
