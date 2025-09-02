@@ -1,91 +1,78 @@
-import { Box, Paper, Typography, Stack, Divider, Alert, Button } from '@mui/material'
+import { Box, Typography, Stack, Divider, Alert, Button, CircularProgress } from '@mui/material'
 import { CalendarToday, Person, Schedule } from '@mui/icons-material'
 import { useGetAcademicYearViewQuery } from '../store/api/academicYearsApi'
-import { useApiError } from '../../../store/api/errorHandling'
+import { useApiError } from '../../../core/api/error-handling'
+import { formatDate, formatDateTime } from '../../../core/utils'
 
 interface AcademicYearDetailViewProps {
-  academicYearId: string
+  academicYearId?: string
 }
 
 const AcademicYearDetailView = ({ academicYearId }: AcademicYearDetailViewProps) => {
-  const { data, error, isLoading, refetch } = useGetAcademicYearViewQuery(academicYearId)
+  const { data, error, isLoading, refetch } = useGetAcademicYearViewQuery(academicYearId!, { skip: !academicYearId })
   const { processError } = useApiError()
+
+  if (!academicYearId) {
+    return (
+      <Alert severity="error">
+        No academic year ID provided
+      </Alert>
+    )
+  }
 
   if (isLoading) {
     return (
-      <Paper sx={{ p: 3, mt: 2 }}>
-        <Typography>Loading academic year details...</Typography>
-      </Paper>
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+        <Stack spacing={2} alignItems="center">
+          <CircularProgress />
+          <Typography>Loading academic year details...</Typography>
+        </Stack>
+      </Box>
     )
   }
 
   if (error) {
     const processedError = processError(error)
     return (
-      <Paper sx={{ p: 3, mt: 2 }}>
-        <Alert 
-          severity="error" 
-          action={
-            <Button color="inherit" size="small" onClick={() => refetch()}>
-              Retry
-            </Button>
-          }
-        >
-          <Typography variant="h6" gutterBottom>
-            {processedError.title || 'Error loading academic year details'}
+      <Alert 
+        severity="error" 
+        action={
+          <Button color="inherit" size="small" onClick={() => refetch()}>
+            Retry
+          </Button>
+        }
+      >
+        <Typography variant="h6" gutterBottom>
+          {processedError.title || 'Error loading academic year details'}
+        </Typography>
+        {processedError.status && (
+          <Typography variant="body2" color="text.secondary">
+            Status Code: {processedError.status}
           </Typography>
-          {processedError.status && (
-            <Typography variant="body2" color="text.secondary">
-              Status Code: {processedError.status}
-            </Typography>
-          )}
-          {processedError.traceId && (
-            <Typography variant="body2" color="text.secondary">
-              Trace ID: {processedError.traceId}
-            </Typography>
-          )}
-        </Alert>
-      </Paper>
+        )}
+        {processedError.traceId && (
+          <Typography variant="body2" color="text.secondary">
+            Trace ID: {processedError.traceId}
+          </Typography>
+        )}
+      </Alert>
     )
   }
 
   if (!data) {
     return (
-      <Paper sx={{ p: 3, mt: 2 }}>
-        <Typography>No data found</Typography>
-      </Paper>
+      <Typography>No data found</Typography>
     )
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-  }
-
-  const formatDateTime = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
 
   return (
-    <Paper sx={{ p: 3, mt: 2 }}>
-      <Stack spacing={3}>
-        <Box>
-          <Typography variant="h4" gutterBottom>
-            Academic Year Details
-          </Typography>
-          <Typography variant="h6" color="primary" gutterBottom>
-            {data.AcademicYearName}
-          </Typography>
-        </Box>
+    <Stack spacing={3}>
+      <Box>
+        <Typography variant="h6" color="primary" gutterBottom>
+          {data.AcademicYearName}
+        </Typography>
+      </Box>
 
         <Divider />
 
@@ -189,7 +176,6 @@ const AcademicYearDetailView = ({ academicYearId }: AcademicYearDetailViewProps)
           </Stack>
         </Box>
       </Stack>
-    </Paper>
   )
 }
 

@@ -156,7 +156,7 @@ const AcademicYearsModalExample = () => {
                         data={modalState.data}
                         title="Custom Modal Example"
                         maxWidth="sm"
-                        footerSlot={(data) => (
+                        footerSlot={(data?: AcademicYearDetails & { id: string }) => (
                             <>
                                 <Button onClick={() => console.log('Custom action!', data)} variant="outlined">
                                     Custom Action

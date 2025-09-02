@@ -1,6 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { useNavigate } from 'react-router'
 import { toast } from 'sonner'
 import { type GridPaginationModel, type GridSortModel } from '@mui/x-data-grid'
 import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation } from '../store/api/academicYearsApi'
@@ -17,7 +16,6 @@ import type { AcademicYear } from '../types/academicYear'
 
 export const useAcademicYearsList = () => {
   const dispatch = useDispatch()
-  const navigate = useNavigate()
   const academicYears = useSelector(selectAllAcademicYears)
   const { currentPage, pageSize, totalRecords, sortField, sortOrder } = useSelector(selectAcademicYearsState)
   const { processError } = useApiError()
@@ -109,16 +107,8 @@ export const useAcademicYearsList = () => {
   }, [dispatch, sortField, sortOrder])
 
   const handleNavigateToView = useCallback((academicYearPK: string) => {
-    navigate(`/academic-years/${academicYearPK}/view`)
-  }, [navigate])
-
-  const handleNavigateToEdit = useCallback((academicYearPK: string) => {
-    navigate(`/academic-years/${academicYearPK}/edit`)
-  }, [navigate])
-
-  const handleNavigateToNew = useCallback(() => {
-    navigate('/academic-years/new')
-  }, [navigate])
+    console.log('View academic year:', academicYearPK)
+  }, [])
 
   const mappedData = useMemo(() => {
     if (!data?.Data) return []
@@ -152,8 +142,6 @@ export const useAcademicYearsList = () => {
     handlePaginationModelChange,
     handleSortModelChange,
     handleNavigateToView,
-    handleNavigateToEdit,
-    handleNavigateToNew,
     refetch,
     processError,
   }

@@ -5,11 +5,37 @@ import {
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
+import { useState } from 'react'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
+import { AcademicYearForm } from './AcademicYearForm'
+import AcademicYearDetailView from './AcademicYearDetailView'
+import { CommanModal } from '../../../components/CommonModal/CommonModal'
 import { useAcademicYearsList } from '../hooks/useAcademicYearsList'
 import type { AcademicYear } from '../types/academicYear'
 
+type FormModalMode = 'create' | 'edit'
+
+interface FormModalState {
+  open: boolean
+  mode: FormModalMode
+  selectedAcademicYear?: AcademicYear
+}
+
+interface DetailModalState {
+  open: boolean
+  selectedAcademicYear?: AcademicYear
+}
+
 const ListView = () => {
+  const [formModalState, setFormModalState] = useState<FormModalState>({
+    open: false,
+    mode: 'create'
+  })
+  
+  const [detailModalState, setDetailModalState] = useState<DetailModalState>({
+    open: false
+  })
+
   const {
     academicYears,
     currentPage,
@@ -25,12 +51,30 @@ const ListView = () => {
     handleDeleteConfirm,
     handlePaginationModelChange,
     handleSortModelChange,
-    handleNavigateToView,
-    handleNavigateToEdit,
-    handleNavigateToNew,
     refetch,
     processError,
   } = useAcademicYearsList()
+
+  const handleOpenFormModal = (mode: FormModalMode, academicYear?: AcademicYear) => {
+    setFormModalState({ open: true, mode, selectedAcademicYear: academicYear })
+  }
+
+  const handleCloseFormModal = () => {
+    setFormModalState({ open: false, mode: 'create', selectedAcademicYear: undefined })
+  }
+
+  const handleOpenDetailModal = (academicYear: AcademicYear) => {
+    setDetailModalState({ open: true, selectedAcademicYear: academicYear })
+  }
+
+  const handleCloseDetailModal = () => {
+    setDetailModalState({ open: false, selectedAcademicYear: undefined })
+  }
+
+  const handleFormSuccess = () => {
+    handleCloseFormModal()
+    refetch()
+  }
 
   const columns: GridColDef[] = [
     {
@@ -91,7 +135,7 @@ const ListView = () => {
               variant="outlined"
               size="small"
               startIcon={<Visibility />}
-              onClick={() => handleNavigateToView(params.row.AcademicYearPK)}
+              onClick={() => handleOpenDetailModal(params.row)}
             >
               View
             </Button>
@@ -99,7 +143,7 @@ const ListView = () => {
               variant="outlined"
               size="small"
               startIcon={<Edit />}
-              onClick={() => handleNavigateToEdit(params.row.AcademicYearPK)}
+              onClick={() => handleOpenFormModal('edit', params.row)}
             >
               Edit
             </Button>
@@ -162,7 +206,7 @@ const ListView = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={handleNavigateToNew}
+          onClick={() => handleOpenFormModal('create')}
         >
           Add Academic Year
         </Button>
@@ -205,6 +249,34 @@ const ListView = () => {
         academicYear={deleteDialog.academicYear}
         isDeleting={isDeleting}
         error={deleteError ? processError(deleteError).title : null}
+      />
+
+      {/* Form Modal for Create/Edit */}
+      <CommanModal
+        isOpen={formModalState.open}
+        onClose={handleCloseFormModal}
+        title={formModalState.mode === 'create' ? 'Create Academic Year' : 'Edit Academic Year'}
+        maxWidth="lg"
+        hideCloseButton={true}
+        bodySlot={AcademicYearForm}
+        bodySlotProps={{
+          initialData: formModalState.selectedAcademicYear,
+          onSuccess: handleFormSuccess,
+          onCancel: handleCloseFormModal,
+        }}
+      />
+
+      {/* Detail View Modal */}
+      <CommanModal
+        isOpen={detailModalState.open}
+        onClose={handleCloseDetailModal}
+        title="Academic Year Details"
+        maxWidth="lg"
+        hideCloseButton={false}
+        bodySlot={AcademicYearDetailView}
+        bodySlotProps={{
+          academicYearId: detailModalState.selectedAcademicYear?.AcademicYearPK,
+        }}
       />
     </Paper>
   )

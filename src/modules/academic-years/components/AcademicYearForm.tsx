@@ -3,8 +3,6 @@ import {
   Box,
   TextField,
   Button,
-  Paper,
-  Typography,
   Stack,
   CircularProgress,
 } from '@mui/material'
@@ -40,12 +38,7 @@ export const AcademicYearForm: React.FC<AcademicYearFormProps> = ({
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>
-      <Paper sx={{ p: 3 }}>
-        <Typography variant="h6" component="h2" gutterBottom>
-          {isEditing ? 'Edit Academic Year' : 'Create Academic Year'}
-        </Typography>
-
-        <Box component="form" onSubmit={handleSubmit(onSubmit)} sx={{ mt: 2 }}>
+      <Box component="form" onSubmit={handleSubmit(onSubmit)}>
           <Stack spacing={3}>
             <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
               <Controller
@@ -250,7 +243,6 @@ export const AcademicYearForm: React.FC<AcademicYearFormProps> = ({
             </Box>
           </Stack>
         </Box>
-      </Paper>
     </LocalizationProvider>
   )
 }

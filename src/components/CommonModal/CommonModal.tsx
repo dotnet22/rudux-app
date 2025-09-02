@@ -4,6 +4,8 @@ import type {
     ModalData, 
     ModalProps, 
     Slot, 
+    SlotComponent,
+    SlotElement,
     SlotRenderFn 
 } from "./types";
 
@@ -20,10 +22,34 @@ export const CommanModal = <T extends ModalData>({
     headerSlot,
     bodySlot,
     footerSlot,
+    headerSlotProps,
+    bodySlotProps,
+    footerSlotProps,
 }: ModalProps<T>) => {
+    const isComponent = <T extends ModalData>(
+        slot: Slot<T>
+    ): slot is SlotComponent => 
+        typeof slot === 'function' && 
+        // React components typically have displayName or name
+        ((slot as any).displayName !== undefined || slot.name !== undefined) &&
+        // Not a render function (which would be anonymous or have specific naming)
+        !slot.name.startsWith('render') && 
+        slot.name !== '';
+
     const isRenderFn = <T extends ModalData>(
-        slot: Slot<T, boolean>,
-    ): slot is SlotRenderFn<T> => typeof slot === 'function';
+        slot: Slot<T>
+    ): slot is SlotRenderFn<T> => 
+        typeof slot === 'function' && 
+        // Either anonymous function or starts with 'render' or has no display name
+        (slot.name === '' || slot.name.startsWith('render') || !(slot as any).displayName);
+
+    const isElement = <T extends ModalData>(
+        slot: Slot<T>
+    ): slot is SlotElement => 
+        typeof slot === 'object' && 
+        slot !== null && 
+        'type' in slot &&
+        'props' in slot;
 
     if (!isOpen) return null;
 
@@ -34,12 +60,37 @@ export const CommanModal = <T extends ModalData>({
         onClose();
     };
 
+    // Render slot content with support for components, elements, and render functions
+    const renderSlot = (
+        slot: Slot<T> | undefined, 
+        slotProps: Record<string, any> = {},
+        defaultContent?: React.ReactNode
+    ) => {
+        if (!slot) return defaultContent;
+        
+        if (isComponent(slot)) {
+            const Component = slot;
+            return <Component {...slotProps} />;
+        }
+        
+        if (isRenderFn(slot)) {
+            return slot(data);
+        }
+        
+        if (isElement(slot)) {
+            return slot;
+        }
+        
+        return defaultContent;
+    };
+
     // Render header content
     const renderHeader = () => {
-        if (headerSlot) {
-            return isRenderFn(headerSlot) ? headerSlot(data) : headerSlot;
-        }
-        return title || 'Modal';
+        return renderSlot(
+            headerSlot, 
+            { ...headerSlotProps, data },
+            title || 'Modal'
+        );
     };
 
     // Render body content
@@ -47,18 +98,19 @@ export const CommanModal = <T extends ModalData>({
         if (children) {
             return children;
         }
-        if (bodySlot) {
-            return isRenderFn(bodySlot) ? bodySlot(data) : bodySlot;
-        }
-        return null;
+        
+        return renderSlot(
+            bodySlot, 
+            { ...bodySlotProps, data },
+            null
+        );
     };
 
     // Render footer content
     const renderFooter = () => {
-        if (footerSlot) {
-            return isRenderFn(footerSlot) ? footerSlot(data) : footerSlot;
-        }
-        return (
+        return renderSlot(
+            footerSlot,
+            { ...footerSlotProps, data },
             <Button autoFocus onClick={onClose}>
                 Close
             </Button>

@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useUpdateAcademicYearMutation, useCreateAcademicYearMutation } from '../store/api/academicYearsApi'
@@ -6,6 +6,7 @@ import { academicYearFormSchema, type AcademicYearFormData } from '../schema'
 import type { AcademicYear } from '../types/academicYear'
 import { transformAcademicYearFormData } from '../utils/transforms'
 import { useFormErrorHandler } from '../../../core/hooks/useFormErrorHandler'
+import { formatDateForInput, formatDateForSubmission } from '../../../core/utils'
 
 interface UseAcademicYearFormOptions {
   initialData?: AcademicYear
@@ -44,19 +45,6 @@ export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearF
     }
   }, [initialData, reset])
 
-  const formatDateForInput = useCallback((dateString: string) => {
-    if (!dateString) return null
-    try {
-      return new Date(dateString)
-    } catch {
-      return null
-    }
-  }, [])
-
-  const formatDateForSubmission = useCallback((date: Date | null) => {
-    if (!date) return ''
-    return date.toISOString()
-  }, [])
 
   const onSubmit = async (data: AcademicYearFormData) => {
     try {
