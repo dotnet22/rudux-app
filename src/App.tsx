@@ -5,7 +5,6 @@ import AppShell from './components/layout/AppShell'
 import AcademicYearsPage from './modules/academic-years/pages/AcademicYearsPage'
 import AcademicYearFormPage from './modules/academic-years/pages/AcademicYearFormPage'
 import AcademicYearDetailPage from './modules/academic-years/pages/AcademicYearDetailPage'
-import AcademicYearsModalExample from './modules/academic-years/components/AcademicYearsModalExample'
 import ProgramsPage from './modules/programs/pages/ProgramsPage'
 import UniversitiesPage from './pages/UniversitiesPage'
 import FacultiesPage from './pages/FacultiesPage'
@@ -33,7 +32,6 @@ function App() {
           <Routes>
             <Route path="/" element={<Navigate to="/academic-years" replace />} />
             <Route path="/academic-years" element={<AcademicYearsPage />} />
-            <Route path="/academic-years/modal-example" element={<AcademicYearsModalExample />} />
             <Route path="/academic-years/new" element={<AcademicYearFormPage />} />
             <Route path="/academic-years/:id/view" element={<AcademicYearDetailPage />} />
             <Route path="/academic-years/:id/edit" element={<AcademicYearFormPage />} />

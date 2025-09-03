@@ -13,7 +13,7 @@ interface UseAcademicYearFormOptions {
   onSuccess?: () => void
 }
 
-export const useAcademicYearForm = ({ initialData, onSuccess }: UseAcademicYearFormOptions = {}) => {
+export const useAcademicYearFormView = ({ initialData, onSuccess }: UseAcademicYearFormOptions = {}) => {
   const [updateAcademicYear, { isLoading: isUpdating }] = useUpdateAcademicYearMutation()
   const [createAcademicYear, { isLoading: isCreating }] = useCreateAcademicYearMutation()
   

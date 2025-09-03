@@ -7,7 +7,7 @@ import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/materia
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
 import { useState } from 'react'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
-import { AcademicYearForm } from './AcademicYearForm'
+import { AcademicYearFormView } from './AcademicYearFormView'
 import AcademicYearDetailView from './AcademicYearDetailView'
 import { CommanModal } from '../../../components/CommonModal/CommonModal'
 import { useAcademicYearsList } from '../hooks/useAcademicYearsList'
@@ -44,6 +44,9 @@ const ListView = () => {
     loading,
     deleteDialog,
     isDeleting,
+    editAcademicYearData,
+    editAcademicYearError,
+    isLoadingEditAcademicYear,
     error,
     deleteError,
     handleDeleteClick,
@@ -51,16 +54,22 @@ const ListView = () => {
     handleDeleteConfirm,
     handlePaginationModelChange,
     handleSortModelChange,
+    handleEditAcademicYear,
+    handleClearEditAcademicYear,
     refetch,
     processError,
   } = useAcademicYearsList()
 
   const handleOpenFormModal = (mode: FormModalMode, academicYear?: AcademicYear) => {
     setFormModalState({ open: true, mode, selectedAcademicYear: academicYear })
+    if (mode === 'edit' && academicYear) {
+      handleEditAcademicYear(academicYear.AcademicYearPK)
+    }
   }
 
   const handleCloseFormModal = () => {
     setFormModalState({ open: false, mode: 'create', selectedAcademicYear: undefined })
+    handleClearEditAcademicYear()
   }
 
   const handleOpenDetailModal = (academicYear: AcademicYear) => {
@@ -258,9 +267,11 @@ const ListView = () => {
         title={formModalState.mode === 'create' ? 'Create Academic Year' : 'Edit Academic Year'}
         maxWidth="lg"
         hideCloseButton={true}
-        bodySlot={AcademicYearForm}
+        bodySlot={AcademicYearFormView}
         bodySlotProps={{
-          initialData: formModalState.selectedAcademicYear,
+          initialData: formModalState.mode === 'edit' ? editAcademicYearData : undefined,
+          isLoading: formModalState.mode === 'edit' ? isLoadingEditAcademicYear : false,
+          error: formModalState.mode === 'edit' ? editAcademicYearError : undefined,
           onSuccess: handleFormSuccess,
           onCancel: handleCloseFormModal,
         }}

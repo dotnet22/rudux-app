@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'sonner'
 import { type GridPaginationModel, type GridSortModel } from '@mui/x-data-grid'
-import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation } from '../store/api/academicYearsApi'
+import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation, useGetAcademicYearByIdQuery } from '../store/api/academicYearsApi'
 import {
   selectAllAcademicYears,
   selectAcademicYearsState,
@@ -28,7 +28,15 @@ export const useAcademicYearsList = () => {
     academicYear: null,
   })
 
+  const [editAcademicYearId, setEditAcademicYearId] = useState<string>('')
+
   const [deleteAcademicYear, { isLoading: isDeleting, error: deleteError }] = useDeleteAcademicYearMutation()
+
+  // Query for fetching individual academic year data for editing
+  const { data: editAcademicYearData, error: editAcademicYearError, isLoading: isLoadingEditAcademicYear } = useGetAcademicYearByIdQuery(
+    editAcademicYearId, 
+    { skip: !editAcademicYearId }
+  )
 
   const requestPayload = useMemo(() => ({
     pageOffset: currentPage,
@@ -110,6 +118,14 @@ export const useAcademicYearsList = () => {
     console.log('View academic year:', academicYearPK)
   }, [])
 
+  const handleEditAcademicYear = useCallback((academicYearPK: string) => {
+    setEditAcademicYearId(academicYearPK)
+  }, [])
+
+  const handleClearEditAcademicYear = useCallback(() => {
+    setEditAcademicYearId('')
+  }, [])
+
   const mappedData = useMemo(() => {
     if (!data?.Data) return []
     return data.Data.map((item: AcademicYear) => ({ ...item, id: item.AcademicYearPK }))
@@ -131,6 +147,12 @@ export const useAcademicYearsList = () => {
     deleteDialog,
     isDeleting,
     
+    // Edit Academic Year State
+    editAcademicYearId,
+    editAcademicYearData,
+    editAcademicYearError,
+    isLoadingEditAcademicYear,
+    
     // API State
     error,
     deleteError,
@@ -142,6 +164,8 @@ export const useAcademicYearsList = () => {
     handlePaginationModelChange,
     handleSortModelChange,
     handleNavigateToView,
+    handleEditAcademicYear,
+    handleClearEditAcademicYear,
     refetch,
     processError,
   }

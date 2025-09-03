@@ -5,21 +5,26 @@ import {
   Button,
   Stack,
   CircularProgress,
+  Alert,
 } from '@mui/material'
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { useAcademicYearForm } from '../hooks/useAcademicYearForm'
+import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
 import type { AcademicYear } from '../types/academicYear'
 
-interface AcademicYearFormProps {
+interface AcademicYearFormViewProps {
   initialData?: AcademicYear
+  isLoading?: boolean
+  error?: any
   onSuccess?: () => void
   onCancel?: () => void
 }
 
-export const AcademicYearForm: React.FC<AcademicYearFormProps> = ({
+export const AcademicYearFormView: React.FC<AcademicYearFormViewProps> = ({
   initialData,
+  isLoading: externalLoading = false,
+  error,
   onSuccess,
   onCancel,
 }) => {
@@ -34,7 +39,27 @@ export const AcademicYearForm: React.FC<AcademicYearFormProps> = ({
     onSubmit,
     formatDateForInput,
     formatDateForSubmission,
-  } = useAcademicYearForm({ initialData, onSuccess })
+  } = useAcademicYearFormView({ initialData, onSuccess })
+
+  // Show loading state when fetching data for edit mode
+  if (externalLoading) {
+    return (
+      <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
+        <CircularProgress />
+      </Box>
+    )
+  }
+
+  // Show error state when API call fails
+  if (error) {
+    return (
+      <Box sx={{ p: 2 }}>
+        <Alert severity="error">
+          Failed to load academic year data. Please try again.
+        </Alert>
+      </Box>
+    )
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns}>

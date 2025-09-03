@@ -1,7 +1,7 @@
 import { useParams, useNavigate } from 'react-router'
 import { Typography, Box, IconButton, CircularProgress, Alert } from '@mui/material'
 import { ArrowBack } from '@mui/icons-material'
-import { AcademicYearForm } from '../components/AcademicYearForm'
+import { AcademicYearFormView } from '../components/AcademicYearFormView'
 import { useGetAcademicYearByIdQuery } from '../store/api/academicYearsApi'
 
 const AcademicYearFormPage = () => {
@@ -73,7 +73,7 @@ const AcademicYearFormPage = () => {
         </Typography>
       </Box>
       
-      <AcademicYearForm
+      <AcademicYearFormView
         initialData={initialData}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
