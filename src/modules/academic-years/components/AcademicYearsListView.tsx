@@ -6,7 +6,7 @@ import {
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
-import { AcademicYearFormView } from './AcademicYearFormView'
+import { AcademicYearFormModal } from './AcademicYearFormModal'
 import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
 import AcademicYearDetailView from './AcademicYearDetailView'
 import { CommanModal } from '../../../components/CommonModal/CommonModal'
@@ -22,13 +22,9 @@ const ListView = () => {
     loading,
     deleteDialog,
     isDeleting,
-    editAcademicYearData,
-    editAcademicYearError,
-    isLoadingEditAcademicYear,
     detailAcademicYearData,
     detailAcademicYearError,
     isLoadingDetailAcademicYear,
-    formModalState,
     detailModalState,
     error,
     deleteError,
@@ -38,20 +34,20 @@ const ListView = () => {
     handlePaginationModelChange,
     handleSortModelChange,
     refetchDetailData,
-    handleOpenFormModal,
-    handleCloseFormModal,
     handleOpenDetailModal,
     handleCloseDetailModal,
-    handleFormSuccess,
     refetch,
     processError,
   } = useAcademicYearsList()
 
 
-  // Form view hook to provide all form-related props
-  const formViewProps = useAcademicYearFormView({
-    initialData: formModalState.mode === 'edit' ? editAcademicYearData : undefined,
-    onSuccess: handleFormSuccess
+  // Form view hook for modal integration
+  const { handleOpenModal } = useAcademicYearFormView({
+    onSuccess: () => {
+      // Callback when form is successfully submitted
+      console.log('Form submitted successfully')
+    },
+    onRefetch: refetch
   })
 
   const columns: GridColDef[] = [
@@ -121,7 +117,7 @@ const ListView = () => {
               variant="outlined"
               size="small"
               startIcon={<Edit />}
-              onClick={() => handleOpenFormModal('edit', params.row)}
+              onClick={() => handleOpenModal('edit', params.row)}
             >
               Edit
             </Button>
@@ -184,7 +180,7 @@ const ListView = () => {
         <Button
           variant="contained"
           startIcon={<Add />}
-          onClick={() => handleOpenFormModal('create')}
+          onClick={() => handleOpenModal('create')}
         >
           Add Academic Year
         </Button>
@@ -230,21 +226,11 @@ const ListView = () => {
       />
 
       {/* Form Modal for Create/Edit */}
-      <CommanModal
-        isOpen={formModalState.open}
-        onClose={handleCloseFormModal}
-        title={formModalState.mode === 'create' ? 'Create Academic Year' : 'Edit Academic Year'}
-        maxWidth="lg"
-        hideCloseButton={true}
-        bodySlot={AcademicYearFormView}
-        bodySlotProps={{
-          ...formViewProps,
-          initialData: formModalState.mode === 'edit' ? editAcademicYearData : undefined,
-          isLoadingExternal: formModalState.mode === 'edit' ? isLoadingEditAcademicYear : false,
-          error: formModalState.mode === 'edit' ? editAcademicYearError : undefined,
-          onSuccess: handleFormSuccess,
-          onCancel: handleCloseFormModal,
+      <AcademicYearFormModal
+        onSuccess={() => {
+          console.log('Form submitted successfully')
         }}
+        onRefetch={refetch}
       />
 
       {/* Detail View Modal */}

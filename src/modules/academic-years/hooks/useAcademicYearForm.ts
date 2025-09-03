@@ -1,7 +1,7 @@
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback, useMemo, useRef } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useUpdateAcademicYearMutation, useCreateAcademicYearMutation } from '../store/api/academicYearsApi'
+import { useUpdateAcademicYearMutation, useCreateAcademicYearMutation, useGetAcademicYearByIdQuery } from '../store/api/academicYearsApi'
 import { academicYearFormSchema, type AcademicYearFormData } from '../schema'
 import type { AcademicYear } from '../types/academicYear'
 import { transformAcademicYearFormData } from '../utils/transforms'
@@ -9,25 +9,61 @@ import { useFormErrorHandler } from '../../../core/hooks/useFormErrorHandler'
 import { formatDateForInput, formatDateForSubmission } from '../../../core/utils'
 
 interface UseAcademicYearFormOptions {
-  initialData?: AcademicYear
   onSuccess?: () => void
+  onRefetch?: () => void
 }
 
-export const useAcademicYearFormView = ({ initialData, onSuccess }: UseAcademicYearFormOptions = {}) => {
+export const useAcademicYearFormView = ({ onSuccess, onRefetch }: UseAcademicYearFormOptions = {}) => {
+  // Stable references for callbacks to prevent unnecessary re-renders
+  const onSuccessRef = useRef(onSuccess)
+  const onRefetchRef = useRef(onRefetch)
+  
+  // Update refs when props change
+  useEffect(() => {
+    onSuccessRef.current = onSuccess
+    onRefetchRef.current = onRefetch
+  }, [onSuccess, onRefetch])
+
+  // Modal state management
+  const [modalState, setModalState] = useState<{
+    open: boolean
+    mode: 'create' | 'edit'
+    selectedAcademicYear?: AcademicYear
+  }>({
+    open: false,
+    mode: 'create'
+  })
+
+  // API mutations
   const [updateAcademicYear, { isLoading: isUpdating }] = useUpdateAcademicYearMutation()
   const [createAcademicYear, { isLoading: isCreating }] = useCreateAcademicYearMutation()
   
-  const isLoading = isUpdating || isCreating
-  const isEditing = !!initialData
+  // Data fetching for edit mode
+  const { data: editAcademicYearData, error: editAcademicYearError, isLoading: isLoadingEditData } = useGetAcademicYearByIdQuery(
+    modalState.selectedAcademicYear?.AcademicYearPK || '', 
+    { skip: modalState.mode !== 'edit' || !modalState.selectedAcademicYear?.AcademicYearPK }
+  )
+
+  // Memoize expensive computations
+  const isLoading = useMemo(() => isUpdating || isCreating, [isUpdating, isCreating])
+  const initialData = useMemo(() => 
+    modalState.mode === 'edit' ? editAcademicYearData : undefined, 
+    [modalState.mode, editAcademicYearData]
+  )
+  const isEditing = useMemo(() => modalState.mode === 'edit', [modalState.mode])
+
+  // Memoize default values to prevent unnecessary form resets
+  const defaultValues = useMemo(() => getDefaultValues(initialData), [initialData])
 
   const form = useForm<AcademicYearFormData>({
     resolver: zodResolver(academicYearFormSchema),
-    defaultValues: getDefaultValues(initialData),
+    defaultValues,
   })
 
   const { reset, setError } = form
   
-  const { handleSuccess, handleError } = useFormErrorHandler({
+  // Memoize form error handler configuration to prevent recreation
+  const formErrorConfig = useMemo(() => ({
     setError,
     successMessage: {
       create: 'Academic year created successfully',
@@ -37,16 +73,34 @@ export const useAcademicYearFormView = ({ initialData, onSuccess }: UseAcademicY
       noChanges: 'No changes were made to the academic year',
       general: 'Failed to save academic year. Please try again.'
     }
-  })
+  }), [setError])
+  
+  const { handleSuccess, handleError } = useFormErrorHandler(formErrorConfig)
 
   useEffect(() => {
     if (initialData) {
-      reset(getDefaultValues(initialData))
+      reset(defaultValues)
     }
-  }, [initialData, reset])
+  }, [initialData, reset, defaultValues])
 
 
-  const onSubmit = async (data: AcademicYearFormData) => {
+  // Modal handlers
+  const handleOpenModal = useCallback((mode: 'create' | 'edit', academicYear?: AcademicYear) => {
+    setModalState({ open: true, mode, selectedAcademicYear: academicYear })
+  }, [])
+
+  const handleCloseModal = useCallback(() => {
+    setModalState({ open: false, mode: 'create', selectedAcademicYear: undefined })
+  }, [])
+
+  const handleFormSuccess = useCallback(() => {
+    handleCloseModal()
+    onSuccessRef.current?.()
+    onRefetchRef.current?.()
+  }, [handleCloseModal])
+
+  // Memoize onSubmit to prevent unnecessary re-renders
+  const onSubmit = useCallback(async (data: AcademicYearFormData) => {
     try {
       const academicYearData = transformAcademicYearFormData(data)
 
@@ -56,21 +110,50 @@ export const useAcademicYearFormView = ({ initialData, onSuccess }: UseAcademicY
 
       const success = handleSuccess(isEditing, result.RowsAffected)
       if (success) {
-        onSuccess?.()
+        handleFormSuccess()
       }
     } catch (error) {
       handleError(error)
     }
-  }
+  }, [isEditing, updateAcademicYear, createAcademicYear, handleSuccess, handleFormSuccess, handleError])
 
-  return {
+  // Memoize utility functions to prevent new references
+  const memoizedFormatDateForInput = useCallback(formatDateForInput, [])
+  const memoizedFormatDateForSubmission = useCallback(formatDateForSubmission, [])
+
+  // Memoize return object to prevent unnecessary re-renders of consuming components
+  return useMemo(() => ({
+    // Form related
     form,
     isLoading,
     isEditing,
     onSubmit,
-    formatDateForInput,
-    formatDateForSubmission,
-  }
+    formatDateForInput: memoizedFormatDateForInput,
+    formatDateForSubmission: memoizedFormatDateForSubmission,
+    
+    // Modal related
+    modalState,
+    editAcademicYearData,
+    editAcademicYearError,
+    isLoadingEditData,
+    handleOpenModal,
+    handleCloseModal,
+    handleFormSuccess,
+  }), [
+    form,
+    isLoading,
+    isEditing,
+    onSubmit,
+    memoizedFormatDateForInput,
+    memoizedFormatDateForSubmission,
+    modalState,
+    editAcademicYearData,
+    editAcademicYearError,
+    isLoadingEditData,
+    handleOpenModal,
+    handleCloseModal,
+    handleFormSuccess,
+  ])
 }
 
 function getDefaultValues(initialData?: AcademicYear): Partial<AcademicYearFormData> {

@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'sonner'
 import { type GridPaginationModel, type GridSortModel } from '@mui/x-data-grid'
-import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery } from '../store/api/academicYearsApi'
+import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation, useGetAcademicYearViewQuery } from '../store/api/academicYearsApi'
 import {
   selectAllAcademicYears,
   selectAcademicYearsState,
@@ -28,17 +28,7 @@ export const useAcademicYearsList = () => {
     academicYear: null,
   })
 
-  const [editAcademicYearId, setEditAcademicYearId] = useState<string>('')
   const [detailAcademicYearId, setDetailAcademicYearId] = useState<string>('')
-
-  const [formModalState, setFormModalState] = useState<{
-    open: boolean
-    mode: 'create' | 'edit'
-    selectedAcademicYear?: AcademicYear
-  }>({
-    open: false,
-    mode: 'create'
-  })
   
   const [detailModalState, setDetailModalState] = useState<{
     open: boolean
@@ -48,12 +38,6 @@ export const useAcademicYearsList = () => {
   })
 
   const [deleteAcademicYear, { isLoading: isDeleting, error: deleteError }] = useDeleteAcademicYearMutation()
-
-  // Query for fetching individual academic year data for editing
-  const { data: editAcademicYearData, error: editAcademicYearError, isLoading: isLoadingEditAcademicYear } = useGetAcademicYearByIdQuery(
-    editAcademicYearId, 
-    { skip: !editAcademicYearId }
-  )
 
   // Query for fetching individual academic year data for detail view
   const { data: detailAcademicYearData, error: detailAcademicYearError, isLoading: isLoadingDetailAcademicYear, refetch: refetchDetailData } = useGetAcademicYearViewQuery(
@@ -142,14 +126,6 @@ export const useAcademicYearsList = () => {
     console.log('View academic year:', academicYearPK)
   }, [])
 
-  const handleEditAcademicYear = useCallback((academicYearPK: string) => {
-    setEditAcademicYearId(academicYearPK)
-  }, [])
-
-  const handleClearEditAcademicYear = useCallback(() => {
-    setEditAcademicYearId('')
-  }, [])
-
   const handleDetailAcademicYear = useCallback((academicYearPK: string) => {
     setDetailAcademicYearId(academicYearPK)
   }, [])
@@ -157,19 +133,6 @@ export const useAcademicYearsList = () => {
   const handleClearDetailAcademicYear = useCallback(() => {
     setDetailAcademicYearId('')
   }, [])
-
-  // Form Modal Handlers
-  const handleOpenFormModal = useCallback((mode: 'create' | 'edit', academicYear?: AcademicYear) => {
-    setFormModalState({ open: true, mode, selectedAcademicYear: academicYear })
-    if (mode === 'edit' && academicYear) {
-      handleEditAcademicYear(academicYear.AcademicYearPK)
-    }
-  }, [handleEditAcademicYear])
-
-  const handleCloseFormModal = useCallback(() => {
-    setFormModalState({ open: false, mode: 'create', selectedAcademicYear: undefined })
-    handleClearEditAcademicYear()
-  }, [handleClearEditAcademicYear])
 
   // Detail Modal Handlers
   const handleOpenDetailModal = useCallback((academicYear: AcademicYear) => {
@@ -182,11 +145,6 @@ export const useAcademicYearsList = () => {
     handleClearDetailAcademicYear()
   }, [handleClearDetailAcademicYear])
 
-  // Form Success Handler
-  const handleFormSuccess = useCallback(() => {
-    handleCloseFormModal()
-    refetch()
-  }, [handleCloseFormModal, refetch])
 
   const mappedData = useMemo(() => {
     if (!data?.Data) return []
@@ -209,12 +167,6 @@ export const useAcademicYearsList = () => {
     deleteDialog,
     isDeleting,
     
-    // Edit Academic Year State
-    editAcademicYearId,
-    editAcademicYearData,
-    editAcademicYearError,
-    isLoadingEditAcademicYear,
-    
     // Detail Academic Year State
     detailAcademicYearId,
     detailAcademicYearData,
@@ -222,7 +174,6 @@ export const useAcademicYearsList = () => {
     isLoadingDetailAcademicYear,
     
     // Modal States
-    formModalState,
     detailModalState,
     
     // API State
@@ -236,18 +187,13 @@ export const useAcademicYearsList = () => {
     handlePaginationModelChange,
     handleSortModelChange,
     handleNavigateToView,
-    handleEditAcademicYear,
-    handleClearEditAcademicYear,
     handleDetailAcademicYear,
     handleClearDetailAcademicYear,
     refetchDetailData,
     
-    // Modal Handlers
-    handleOpenFormModal,
-    handleCloseFormModal,
+    // Detail Modal Handlers
     handleOpenDetailModal,
     handleCloseDetailModal,
-    handleFormSuccess,
     
     refetch,
     processError,

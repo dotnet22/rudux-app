@@ -10,43 +10,33 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import type { AcademicYear } from '../types/academicYear'
-import type { UseFormReturn } from 'react-hook-form'
-import type { AcademicYearFormData } from '../schema'
+import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
+import { memo } from 'react'
 
 interface AcademicYearFormViewProps {
-  // Form-related props from the hook
-  form: UseFormReturn<AcademicYearFormData>
-  isLoading: boolean
-  isEditing: boolean
-  onSubmit: (data: AcademicYearFormData) => Promise<void>
-  formatDateForInput: (date: string | null | undefined) => Date | null
-  formatDateForSubmission: (date: Date | null) => string
-  
-  // Additional props
-  initialData?: AcademicYear
-  isLoadingExternal?: boolean
-  error?: unknown
   onSuccess?: () => void
+  onRefetch?: () => void
   onCancel?: () => void
 }
 
-export const AcademicYearFormView: React.FC<AcademicYearFormViewProps> = ({
-  form: { control, handleSubmit, formState: { errors, isDirty } },
-  isLoading: formIsLoading,
-  isEditing,
-  onSubmit,
-  formatDateForInput,
-  formatDateForSubmission,
-  isLoadingExternal = false,
-  error,
+const AcademicYearFormViewComponent: React.FC<AcademicYearFormViewProps> = ({
+  onSuccess,
+  onRefetch,
   onCancel,
 }) => {
-  // Use form loading state or external loading state
-  const isLoading = formIsLoading || isLoadingExternal
+  const {
+    form: { control, handleSubmit, formState: { errors, isDirty } },
+    isLoading,
+    isEditing,
+    onSubmit,
+    formatDateForInput,
+    formatDateForSubmission,
+    editAcademicYearError,
+    isLoadingEditData,
+  } = useAcademicYearFormView({ onSuccess, onRefetch })
 
   // Show loading state when fetching data for edit mode
-  if (isLoadingExternal) {
+  if (isLoadingEditData) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
         <CircularProgress />
@@ -55,7 +45,7 @@ export const AcademicYearFormView: React.FC<AcademicYearFormViewProps> = ({
   }
 
   // Show error state when API call fails
-  if (error) {
+  if (editAcademicYearError) {
     return (
       <Box sx={{ p: 2 }}>
         <Alert severity="error">
@@ -275,3 +265,6 @@ export const AcademicYearFormView: React.FC<AcademicYearFormViewProps> = ({
     </LocalizationProvider>
   )
 }
+
+// Memoize the component to prevent unnecessary re-renders
+export const AcademicYearFormView = memo(AcademicYearFormViewComponent)
