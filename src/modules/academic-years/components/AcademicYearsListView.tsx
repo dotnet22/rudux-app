@@ -4,7 +4,7 @@ import {
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography, Alert, Button, Stack, Tooltip, IconButton } from '@mui/material'
-import { Add, Edit, Visibility, Delete, Refresh, FilterList } from '@mui/icons-material'
+import { Add, Edit, Visibility, Delete, Refresh } from '@mui/icons-material'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 import { AcademicYearFormView } from './AcademicYearFormView'
 import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
@@ -97,7 +97,6 @@ const ListView = () => {
         
         const isActive = now >= startDate && now <= endDate
         const isPast = now > endDate
-        const isFuture = now < startDate
         
         return (
           <Chip

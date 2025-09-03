@@ -1,7 +1,7 @@
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import { isValidElement, ComponentType } from "react";
-import type { ModalData, ModalProps } from "./types";
+import { isValidElement, type ComponentType } from "react";
+import type { ModalData, ModalProps, Slot } from "./types";
 
 export const CommanModal = <T extends ModalData>({
     isOpen,
@@ -31,8 +31,8 @@ export const CommanModal = <T extends ModalData>({
 
     // Simple slot renderer - try React component first, then render function, then element
     const renderSlot = (
-        slot: any,
-        props: Record<string, any> = {},
+        slot: Slot<T>,
+        props: Record<string, unknown> = {},
         fallback?: React.ReactNode
     ): React.ReactNode => {
         if (!slot) return fallback;
@@ -46,16 +46,18 @@ export const CommanModal = <T extends ModalData>({
         if (typeof slot === 'function') {
             try {
                 // Try as React component first
-                return <slot {...props} />;
+                const Component = slot as ComponentType<Record<string, unknown>>;
+                return <Component {...props} />;
             } catch {
                 // If that fails, try as render function
-                return slot(data);
+                const renderFn = slot as (data?: T) => React.ReactElement;
+                return renderFn(data);
             }
         }
 
         // If it's a React.memo or forwardRef component (object with $$typeof)
-        if (typeof slot === 'object' && slot?.$$typeof) {
-            const Component = slot as ComponentType<any>;
+        if (typeof slot === 'object' && slot && '$$typeof' in slot) {
+            const Component = slot as ComponentType<Record<string, unknown>>;
             return <Component {...props} />;
         }
 

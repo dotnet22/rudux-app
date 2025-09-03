@@ -2,22 +2,25 @@ import { Box, Typography, Stack, Divider, Alert, Button, CircularProgress, Card,
 import { CalendarToday, Person, Schedule, AccountBalance, Event, Info, DateRange } from '@mui/icons-material'
 import { formatDate, formatDateTime } from '../../../core/utils'
 import type { AcademicYear } from '../types/academicYear'
+import { useAcademicYearDetailView } from '../hooks/useAcademicYearDetailView'
 
 export interface AcademicYearDetailViewProps {
-  data?: AcademicYear
-  isLoading?: boolean
-  error?: unknown
-  onRetry?: () => void
+  academicYearId?: string
+  academicYear?: AcademicYear | null
 }
 
 const AcademicYearDetailView = ({ 
-  data, 
-  isLoading: externalLoading = false, 
-  error,
-  onRetry 
+  academicYearId,
+  academicYear
 }: AcademicYearDetailViewProps) => {
+  const {
+    data,
+    isLoading,
+    error,
+    onRetry
+  } = useAcademicYearDetailView({ academicYearId, academicYear })
   // Show loading state when fetching data
-  if (externalLoading) {
+  if (isLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 300, p: 3 }}>
         <Stack spacing={3} alignItems="center">
