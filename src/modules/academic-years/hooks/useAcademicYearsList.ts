@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { toast } from 'sonner'
 import { type GridPaginationModel, type GridSortModel } from '@mui/x-data-grid'
-import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation, useGetAcademicYearByIdQuery } from '../store/api/academicYearsApi'
+import { useGetAcademicYearsQuery, useDeleteAcademicYearMutation, useGetAcademicYearByIdQuery, useGetAcademicYearViewQuery } from '../store/api/academicYearsApi'
 import {
   selectAllAcademicYears,
   selectAcademicYearsState,
@@ -29,6 +29,23 @@ export const useAcademicYearsList = () => {
   })
 
   const [editAcademicYearId, setEditAcademicYearId] = useState<string>('')
+  const [detailAcademicYearId, setDetailAcademicYearId] = useState<string>('')
+
+  const [formModalState, setFormModalState] = useState<{
+    open: boolean
+    mode: 'create' | 'edit'
+    selectedAcademicYear?: AcademicYear
+  }>({
+    open: false,
+    mode: 'create'
+  })
+  
+  const [detailModalState, setDetailModalState] = useState<{
+    open: boolean
+    selectedAcademicYear?: AcademicYear
+  }>({
+    open: false
+  })
 
   const [deleteAcademicYear, { isLoading: isDeleting, error: deleteError }] = useDeleteAcademicYearMutation()
 
@@ -37,6 +54,13 @@ export const useAcademicYearsList = () => {
     editAcademicYearId, 
     { skip: !editAcademicYearId }
   )
+
+  // Query for fetching individual academic year data for detail view
+  const { data: detailAcademicYearData, error: detailAcademicYearError, isLoading: isLoadingDetailAcademicYear, refetch: refetchDetailData } = useGetAcademicYearViewQuery(
+    detailAcademicYearId, 
+    { skip: !detailAcademicYearId }
+  )
+
 
   const requestPayload = useMemo(() => ({
     pageOffset: currentPage,
@@ -126,6 +150,44 @@ export const useAcademicYearsList = () => {
     setEditAcademicYearId('')
   }, [])
 
+  const handleDetailAcademicYear = useCallback((academicYearPK: string) => {
+    setDetailAcademicYearId(academicYearPK)
+  }, [])
+
+  const handleClearDetailAcademicYear = useCallback(() => {
+    setDetailAcademicYearId('')
+  }, [])
+
+  // Form Modal Handlers
+  const handleOpenFormModal = useCallback((mode: 'create' | 'edit', academicYear?: AcademicYear) => {
+    setFormModalState({ open: true, mode, selectedAcademicYear: academicYear })
+    if (mode === 'edit' && academicYear) {
+      handleEditAcademicYear(academicYear.AcademicYearPK)
+    }
+  }, [handleEditAcademicYear])
+
+  const handleCloseFormModal = useCallback(() => {
+    setFormModalState({ open: false, mode: 'create', selectedAcademicYear: undefined })
+    handleClearEditAcademicYear()
+  }, [handleClearEditAcademicYear])
+
+  // Detail Modal Handlers
+  const handleOpenDetailModal = useCallback((academicYear: AcademicYear) => {
+    setDetailModalState({ open: true, selectedAcademicYear: academicYear })
+    handleDetailAcademicYear(academicYear.AcademicYearPK)
+  }, [handleDetailAcademicYear])
+
+  const handleCloseDetailModal = useCallback(() => {
+    setDetailModalState({ open: false, selectedAcademicYear: undefined })
+    handleClearDetailAcademicYear()
+  }, [handleClearDetailAcademicYear])
+
+  // Form Success Handler
+  const handleFormSuccess = useCallback(() => {
+    handleCloseFormModal()
+    refetch()
+  }, [handleCloseFormModal, refetch])
+
   const mappedData = useMemo(() => {
     if (!data?.Data) return []
     return data.Data.map((item: AcademicYear) => ({ ...item, id: item.AcademicYearPK }))
@@ -153,6 +215,16 @@ export const useAcademicYearsList = () => {
     editAcademicYearError,
     isLoadingEditAcademicYear,
     
+    // Detail Academic Year State
+    detailAcademicYearId,
+    detailAcademicYearData,
+    detailAcademicYearError,
+    isLoadingDetailAcademicYear,
+    
+    // Modal States
+    formModalState,
+    detailModalState,
+    
     // API State
     error,
     deleteError,
@@ -166,6 +238,17 @@ export const useAcademicYearsList = () => {
     handleNavigateToView,
     handleEditAcademicYear,
     handleClearEditAcademicYear,
+    handleDetailAcademicYear,
+    handleClearDetailAcademicYear,
+    refetchDetailData,
+    
+    // Modal Handlers
+    handleOpenFormModal,
+    handleCloseFormModal,
+    handleOpenDetailModal,
+    handleCloseDetailModal,
+    handleFormSuccess,
+    
     refetch,
     processError,
   }

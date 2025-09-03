@@ -5,37 +5,15 @@ import {
 } from '@mui/x-data-grid'
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
-import { useState } from 'react'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 import { AcademicYearFormView } from './AcademicYearFormView'
+import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
 import AcademicYearDetailView from './AcademicYearDetailView'
 import { CommanModal } from '../../../components/CommonModal/CommonModal'
 import { useAcademicYearsList } from '../hooks/useAcademicYearsList'
 import type { AcademicYear } from '../types/academicYear'
 
-type FormModalMode = 'create' | 'edit'
-
-interface FormModalState {
-  open: boolean
-  mode: FormModalMode
-  selectedAcademicYear?: AcademicYear
-}
-
-interface DetailModalState {
-  open: boolean
-  selectedAcademicYear?: AcademicYear
-}
-
 const ListView = () => {
-  const [formModalState, setFormModalState] = useState<FormModalState>({
-    open: false,
-    mode: 'create'
-  })
-  
-  const [detailModalState, setDetailModalState] = useState<DetailModalState>({
-    open: false
-  })
-
   const {
     academicYears,
     currentPage,
@@ -47,6 +25,11 @@ const ListView = () => {
     editAcademicYearData,
     editAcademicYearError,
     isLoadingEditAcademicYear,
+    detailAcademicYearData,
+    detailAcademicYearError,
+    isLoadingDetailAcademicYear,
+    formModalState,
+    detailModalState,
     error,
     deleteError,
     handleDeleteClick,
@@ -54,36 +37,22 @@ const ListView = () => {
     handleDeleteConfirm,
     handlePaginationModelChange,
     handleSortModelChange,
-    handleEditAcademicYear,
-    handleClearEditAcademicYear,
+    refetchDetailData,
+    handleOpenFormModal,
+    handleCloseFormModal,
+    handleOpenDetailModal,
+    handleCloseDetailModal,
+    handleFormSuccess,
     refetch,
     processError,
   } = useAcademicYearsList()
 
-  const handleOpenFormModal = (mode: FormModalMode, academicYear?: AcademicYear) => {
-    setFormModalState({ open: true, mode, selectedAcademicYear: academicYear })
-    if (mode === 'edit' && academicYear) {
-      handleEditAcademicYear(academicYear.AcademicYearPK)
-    }
-  }
 
-  const handleCloseFormModal = () => {
-    setFormModalState({ open: false, mode: 'create', selectedAcademicYear: undefined })
-    handleClearEditAcademicYear()
-  }
-
-  const handleOpenDetailModal = (academicYear: AcademicYear) => {
-    setDetailModalState({ open: true, selectedAcademicYear: academicYear })
-  }
-
-  const handleCloseDetailModal = () => {
-    setDetailModalState({ open: false, selectedAcademicYear: undefined })
-  }
-
-  const handleFormSuccess = () => {
-    handleCloseFormModal()
-    refetch()
-  }
+  // Form view hook to provide all form-related props
+  const formViewProps = useAcademicYearFormView({
+    initialData: formModalState.mode === 'edit' ? editAcademicYearData : undefined,
+    onSuccess: handleFormSuccess
+  })
 
   const columns: GridColDef[] = [
     {
@@ -269,8 +238,9 @@ const ListView = () => {
         hideCloseButton={true}
         bodySlot={AcademicYearFormView}
         bodySlotProps={{
+          ...formViewProps,
           initialData: formModalState.mode === 'edit' ? editAcademicYearData : undefined,
-          isLoading: formModalState.mode === 'edit' ? isLoadingEditAcademicYear : false,
+          isLoadingExternal: formModalState.mode === 'edit' ? isLoadingEditAcademicYear : false,
           error: formModalState.mode === 'edit' ? editAcademicYearError : undefined,
           onSuccess: handleFormSuccess,
           onCancel: handleCloseFormModal,
@@ -286,7 +256,10 @@ const ListView = () => {
         hideCloseButton={false}
         bodySlot={AcademicYearDetailView}
         bodySlotProps={{
-          academicYearId: detailModalState.selectedAcademicYear?.AcademicYearPK,
+          data: detailAcademicYearData,
+          isLoading: isLoadingDetailAcademicYear,
+          error: detailAcademicYearError,
+          onRetry: refetchDetailData,
         }}
       />
     </Paper>

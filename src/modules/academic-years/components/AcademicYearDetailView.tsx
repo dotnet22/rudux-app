@@ -1,26 +1,23 @@
 import { Box, Typography, Stack, Divider, Alert, Button, CircularProgress } from '@mui/material'
 import { CalendarToday, Person, Schedule } from '@mui/icons-material'
-import { useGetAcademicYearViewQuery } from '../store/api/academicYearsApi'
-import { useApiError } from '../../../core/api/error-handling'
 import { formatDate, formatDateTime } from '../../../core/utils'
+import type { AcademicYear } from '../types/academicYear'
 
 interface AcademicYearDetailViewProps {
-  academicYearId?: string
+  data?: AcademicYear
+  isLoading?: boolean
+  error?: unknown
+  onRetry?: () => void
 }
 
-const AcademicYearDetailView = ({ academicYearId }: AcademicYearDetailViewProps) => {
-  const { data, error, isLoading, refetch } = useGetAcademicYearViewQuery(academicYearId!, { skip: !academicYearId })
-  const { processError } = useApiError()
-
-  if (!academicYearId) {
-    return (
-      <Alert severity="error">
-        No academic year ID provided
-      </Alert>
-    )
-  }
-
-  if (isLoading) {
+const AcademicYearDetailView = ({ 
+  data, 
+  isLoading: externalLoading = false, 
+  error,
+  onRetry 
+}: AcademicYearDetailViewProps) => {
+  // Show loading state when fetching data
+  if (externalLoading) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
         <Stack spacing={2} alignItems="center">
@@ -31,37 +28,29 @@ const AcademicYearDetailView = ({ academicYearId }: AcademicYearDetailViewProps)
     )
   }
 
+  // Show error state when API call fails
   if (error) {
-    const processedError = processError(error)
     return (
       <Alert 
         severity="error" 
         action={
-          <Button color="inherit" size="small" onClick={() => refetch()}>
-            Retry
-          </Button>
+          onRetry && (
+            <Button color="inherit" size="small" onClick={onRetry}>
+              Retry
+            </Button>
+          )
         }
       >
-        <Typography variant="h6" gutterBottom>
-          {processedError.title || 'Error loading academic year details'}
-        </Typography>
-        {processedError.status && (
-          <Typography variant="body2" color="text.secondary">
-            Status Code: {processedError.status}
-          </Typography>
-        )}
-        {processedError.traceId && (
-          <Typography variant="body2" color="text.secondary">
-            Trace ID: {processedError.traceId}
-          </Typography>
-        )}
+        Failed to load academic year details. Please try again.
       </Alert>
     )
   }
 
   if (!data) {
     return (
-      <Typography>No data found</Typography>
+      <Alert severity="info">
+        No academic year data available
+      </Alert>
     )
   }
 

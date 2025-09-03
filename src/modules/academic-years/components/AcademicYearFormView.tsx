@@ -10,39 +10,43 @@ import {
 import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
-import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
 import type { AcademicYear } from '../types/academicYear'
+import type { UseFormReturn } from 'react-hook-form'
+import type { AcademicYearFormData } from '../schema'
 
 interface AcademicYearFormViewProps {
+  // Form-related props from the hook
+  form: UseFormReturn<AcademicYearFormData>
+  isLoading: boolean
+  isEditing: boolean
+  onSubmit: (data: AcademicYearFormData) => Promise<void>
+  formatDateForInput: (date: string | null | undefined) => Date | null
+  formatDateForSubmission: (date: Date | null) => string
+  
+  // Additional props
   initialData?: AcademicYear
-  isLoading?: boolean
-  error?: any
+  isLoadingExternal?: boolean
+  error?: unknown
   onSuccess?: () => void
   onCancel?: () => void
 }
 
 export const AcademicYearFormView: React.FC<AcademicYearFormViewProps> = ({
-  initialData,
-  isLoading: externalLoading = false,
+  form: { control, handleSubmit, formState: { errors, isDirty } },
+  isLoading: formIsLoading,
+  isEditing,
+  onSubmit,
+  formatDateForInput,
+  formatDateForSubmission,
+  isLoadingExternal = false,
   error,
-  onSuccess,
   onCancel,
 }) => {
-  const {
-    form: {
-      control,
-      handleSubmit,
-      formState: { errors, isDirty },
-    },
-    isLoading,
-    isEditing,
-    onSubmit,
-    formatDateForInput,
-    formatDateForSubmission,
-  } = useAcademicYearFormView({ initialData, onSuccess })
+  // Use form loading state or external loading state
+  const isLoading = formIsLoading || isLoadingExternal
 
   // Show loading state when fetching data for edit mode
-  if (externalLoading) {
+  if (isLoadingExternal) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 200 }}>
         <CircularProgress />
