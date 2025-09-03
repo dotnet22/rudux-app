@@ -66,6 +66,14 @@ const ListView = () => {
     mode: modalState.mode,
   }), [refetch, handleCloseModal, modalState.selectedAcademicYear, modalState.mode])
 
+  // Memoize detail view props with proper typing
+  const detailBodySlotProps = useMemo(() => ({
+    data: detailAcademicYearData,
+    isLoading: isLoadingDetailAcademicYear,
+    error: detailAcademicYearError,
+    onRetry: refetchDetailData,
+  }), [detailAcademicYearData, isLoadingDetailAcademicYear, detailAcademicYearError, refetchDetailData])
+
   const columns: GridColDef[] = [
     {
       field: 'AcademicYearPK',
@@ -260,12 +268,7 @@ const ListView = () => {
         maxWidth="lg"
         hideCloseButton={false}
         bodySlot={AcademicYearDetailView}
-        bodySlotProps={{
-          data: detailAcademicYearData,
-          isLoading: isLoadingDetailAcademicYear,
-          error: detailAcademicYearError,
-          onRetry: refetchDetailData,
-        }}
+        bodySlotProps={detailBodySlotProps}
       />
     </Paper>
   )

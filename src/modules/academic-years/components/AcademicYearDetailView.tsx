@@ -3,7 +3,7 @@ import { CalendarToday, Person, Schedule } from '@mui/icons-material'
 import { formatDate, formatDateTime } from '../../../core/utils'
 import type { AcademicYear } from '../types/academicYear'
 
-interface AcademicYearDetailViewProps {
+export interface AcademicYearDetailViewProps {
   data?: AcademicYear
   isLoading?: boolean
   error?: unknown
