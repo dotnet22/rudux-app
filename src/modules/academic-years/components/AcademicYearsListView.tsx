@@ -62,7 +62,9 @@ const ListView = () => {
     },
     onRefetch: refetch,
     onCancel: handleCloseModal,
-  }), [refetch, handleCloseModal])
+    academicYear: modalState.selectedAcademicYear || null,
+    mode: modalState.mode,
+  }), [refetch, handleCloseModal, modalState.selectedAcademicYear, modalState.mode])
 
   const columns: GridColDef[] = [
     {

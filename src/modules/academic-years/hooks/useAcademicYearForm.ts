@@ -11,9 +11,11 @@ import { formatDateForInput, formatDateForSubmission } from '../../../core/utils
 interface UseAcademicYearFormOptions {
   onSuccess?: () => void
   onRefetch?: () => void
+  academicYear?: AcademicYear | null
+  mode?: 'create' | 'edit'
 }
 
-export const useAcademicYearFormView = ({ onSuccess, onRefetch }: UseAcademicYearFormOptions = {}) => {
+export const useAcademicYearFormView = ({ onSuccess, onRefetch, academicYear = null, mode = 'create' }: UseAcademicYearFormOptions = {}) => {
   // Stable references for callbacks to prevent unnecessary re-renders
   const onSuccessRef = useRef(onSuccess)
   const onRefetchRef = useRef(onRefetch)
@@ -24,7 +26,7 @@ export const useAcademicYearFormView = ({ onSuccess, onRefetch }: UseAcademicYea
     onRefetchRef.current = onRefetch
   }, [onSuccess, onRefetch])
 
-  // Modal state management
+  // Modal state management (for backward compatibility)
   const [modalState, setModalState] = useState<{
     open: boolean
     mode: 'create' | 'edit'
@@ -38,19 +40,26 @@ export const useAcademicYearFormView = ({ onSuccess, onRefetch }: UseAcademicYea
   const [updateAcademicYear, { isLoading: isUpdating }] = useUpdateAcademicYearMutation()
   const [createAcademicYear, { isLoading: isCreating }] = useCreateAcademicYearMutation()
   
-  // Data fetching for edit mode
+  // Use passed parameters or fallback to modal state
+  const currentMode = mode || modalState.mode
+  const currentAcademicYear = academicYear || modalState.selectedAcademicYear
+  
+  // Data fetching for edit mode - use the passed academic year or fetch by ID
   const { data: editAcademicYearData, error: editAcademicYearError, isLoading: isLoadingEditData } = useGetAcademicYearByIdQuery(
-    modalState.selectedAcademicYear?.AcademicYearPK || '', 
-    { skip: modalState.mode !== 'edit' || !modalState.selectedAcademicYear?.AcademicYearPK }
+    currentAcademicYear?.AcademicYearPK || '', 
+    { skip: currentMode !== 'edit' || !currentAcademicYear?.AcademicYearPK }
   )
 
   // Memoize expensive computations
   const isLoading = useMemo(() => isUpdating || isCreating, [isUpdating, isCreating])
-  const initialData = useMemo(() => 
-    modalState.mode === 'edit' ? editAcademicYearData : undefined, 
-    [modalState.mode, editAcademicYearData]
-  )
-  const isEditing = useMemo(() => modalState.mode === 'edit', [modalState.mode])
+  const initialData = useMemo(() => {
+    if (currentMode === 'edit') {
+      // If academic year is passed directly, use it; otherwise use fetched data
+      return academicYear || editAcademicYearData
+    }
+    return undefined
+  }, [currentMode, academicYear, editAcademicYearData])
+  const isEditing = useMemo(() => currentMode === 'edit', [currentMode])
 
   // Memoize default values to prevent unnecessary form resets
   const defaultValues = useMemo(() => getDefaultValues(initialData), [initialData])

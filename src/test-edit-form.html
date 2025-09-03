@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Edit Form</title>
+</head>
+<body>
+    <h1>Test Academic Year Edit Form</h1>
+    <p>Since the API is returning 500 errors, let me verify the fix by checking the code structure:</p>
+    
+    <h2>What was fixed:</h2>
+    <ol>
+        <li><strong>Hook modified</strong>: Added `academicYear` and `mode` parameters to `useAcademicYearFormView`</li>
+        <li><strong>Form component updated</strong>: Added props to accept `academicYear` and `mode`</li>
+        <li><strong>List view updated</strong>: Now passes the selected academic year data to the form</li>
+        <li><strong>Form page updated</strong>: Fixed prop interface to match new structure</li>
+    </ol>
+    
+    <h2>Key changes made:</h2>
+    <pre>
+    // In useAcademicYearForm.ts:
+    - Added academicYear and mode parameters
+    - Modified data fetching logic to use passed data or fetch by ID
+    - Updated form initialization to use external academic year data
+    
+    // In AcademicYearFormView.tsx:
+    - Added academicYear and mode props
+    - Pass these props to the hook
+    
+    // In AcademicYearsListView.tsx:
+    - Updated bodySlotProps to include academic year data and mode
+    
+    // In AcademicYearFormPage.tsx:
+    - Updated props from initialData to academicYear
+    </pre>
+    
+    <p>The edit form should now display the academic year data when opened in edit mode.</p>
+</body>
+</html>

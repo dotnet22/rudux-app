@@ -12,17 +12,22 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
 import { memo } from 'react'
+import type { AcademicYear } from '../types/academicYear'
 
 interface AcademicYearFormViewProps {
   onSuccess?: () => void
   onRefetch?: () => void
   onCancel?: () => void
+  academicYear?: AcademicYear | null
+  mode?: 'create' | 'edit'
 }
 
 const AcademicYearFormViewComponent: React.FC<AcademicYearFormViewProps> = ({
   onSuccess,
   onRefetch,
   onCancel,
+  academicYear = null,
+  mode = 'create',
 }) => {
   const {
     form: { control, handleSubmit, formState: { errors, isDirty } },
@@ -33,7 +38,7 @@ const AcademicYearFormViewComponent: React.FC<AcademicYearFormViewProps> = ({
     formatDateForSubmission,
     editAcademicYearError,
     isLoadingEditData,
-  } = useAcademicYearFormView({ onSuccess, onRefetch })
+  } = useAcademicYearFormView({ onSuccess, onRefetch, academicYear, mode })
 
   // Show loading state when fetching data for edit mode
   if (isLoadingEditData) {
@@ -268,3 +273,4 @@ const AcademicYearFormViewComponent: React.FC<AcademicYearFormViewProps> = ({
 
 // Memoize the component to prevent unnecessary re-renders
 export const AcademicYearFormView = memo(AcademicYearFormViewComponent)
+AcademicYearFormView.displayName = 'AcademicYearFormView'

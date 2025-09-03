@@ -74,7 +74,8 @@ const AcademicYearFormPage = () => {
       </Box>
       
       <AcademicYearFormView
-        initialData={initialData}
+        academicYear={initialData || null}
+        mode={isEditMode ? 'edit' : 'create'}
         onSuccess={handleSuccess}
         onCancel={handleCancel}
       />

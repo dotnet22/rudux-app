@@ -28,13 +28,19 @@ export const CommanModal = <T extends ModalData>({
 }: ModalProps<T>) => {
     const isComponent = <T extends ModalData>(
         slot: Slot<T>
-    ): slot is SlotComponent => 
-        typeof slot === 'function' && 
-        // React components typically have displayName or name
-        ((slot as any).displayName !== undefined || slot.name !== undefined) &&
-        // Not a render function (which would be anonymous or have specific naming)
-        !slot.name.startsWith('render') && 
-        slot.name !== '';
+    ): slot is SlotComponent => {
+        // Check if it's a regular function component
+        if (typeof slot === 'function') {
+            return !(slot.name === '' || slot.name.startsWith('render'));
+        }
+        
+        // Check if it's a React.memo component (object with $$typeof)
+        if (typeof slot === 'object' && slot && (slot as any).$$typeof) {
+            return true;
+        }
+        
+        return false;
+    };
 
     const isRenderFn = <T extends ModalData>(
         slot: Slot<T>
