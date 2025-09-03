@@ -6,12 +6,13 @@ import {
 import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
 import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
-import { AcademicYearFormModal } from './AcademicYearFormModal'
+import { AcademicYearFormView } from './AcademicYearFormView'
 import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
 import AcademicYearDetailView from './AcademicYearDetailView'
 import { CommanModal } from '../../../components/CommonModal/CommonModal'
 import { useAcademicYearsList } from '../hooks/useAcademicYearsList'
 import type { AcademicYear } from '../types/academicYear'
+import { useMemo } from 'react'
 
 const ListView = () => {
   const {
@@ -42,13 +43,26 @@ const ListView = () => {
 
 
   // Form view hook for modal integration
-  const { handleOpenModal } = useAcademicYearFormView({
+  const { 
+    modalState, 
+    handleOpenModal, 
+    handleCloseModal 
+  } = useAcademicYearFormView({
     onSuccess: () => {
       // Callback when form is successfully submitted
       console.log('Form submitted successfully')
     },
     onRefetch: refetch
   })
+
+  // Memoize body slot props to prevent unnecessary re-renders
+  const formBodySlotProps = useMemo(() => ({
+    onSuccess: () => {
+      console.log('Form submitted successfully')
+    },
+    onRefetch: refetch,
+    onCancel: handleCloseModal,
+  }), [refetch, handleCloseModal])
 
   const columns: GridColDef[] = [
     {
@@ -226,11 +240,14 @@ const ListView = () => {
       />
 
       {/* Form Modal for Create/Edit */}
-      <AcademicYearFormModal
-        onSuccess={() => {
-          console.log('Form submitted successfully')
-        }}
-        onRefetch={refetch}
+      <CommanModal
+        isOpen={modalState.open}
+        onClose={handleCloseModal}
+        title={modalState.mode === 'create' ? 'Create Academic Year' : 'Edit Academic Year'}
+        maxWidth="lg"
+        hideCloseButton={true}
+        bodySlot={AcademicYearFormView}
+        bodySlotProps={formBodySlotProps}
       />
 
       {/* Detail View Modal */}
