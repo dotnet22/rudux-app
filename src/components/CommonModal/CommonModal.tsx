@@ -1,13 +1,7 @@
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, IconButton } from "@mui/material";
 import { Close } from "@mui/icons-material";
-import type { 
-    ModalData, 
-    ModalProps, 
-    Slot, 
-    SlotComponent,
-    SlotElement,
-    SlotRenderFn 
-} from "./types";
+import { isValidElement, ComponentType } from "react";
+import type { ModalData, ModalProps } from "./types";
 
 export const CommanModal = <T extends ModalData>({
     isOpen,
@@ -22,41 +16,10 @@ export const CommanModal = <T extends ModalData>({
     headerSlot,
     bodySlot,
     footerSlot,
-    headerSlotProps,
-    bodySlotProps,
-    footerSlotProps,
+    headerSlotProps = {},
+    bodySlotProps = {},
+    footerSlotProps = {},
 }: ModalProps<T>) => {
-    const isComponent = <T extends ModalData>(
-        slot: Slot<T>
-    ): slot is SlotComponent => {
-        // Check if it's a regular function component
-        if (typeof slot === 'function') {
-            return !(slot.name === '' || slot.name.startsWith('render'));
-        }
-        
-        // Check if it's a React.memo component (object with $$typeof)
-        if (typeof slot === 'object' && slot && (slot as any).$$typeof) {
-            return true;
-        }
-        
-        return false;
-    };
-
-    const isRenderFn = <T extends ModalData>(
-        slot: Slot<T>
-    ): slot is SlotRenderFn<T> => 
-        typeof slot === 'function' && 
-        // Either anonymous function or starts with 'render' or has no display name
-        (slot.name === '' || slot.name.startsWith('render') || !(slot as any).displayName);
-
-    const isElement = <T extends ModalData>(
-        slot: Slot<T>
-    ): slot is SlotElement => 
-        typeof slot === 'object' && 
-        slot !== null && 
-        'type' in slot &&
-        'props' in slot;
-
     if (!isOpen) return null;
 
     const handleClose = (_event: object, reason: string) => {
@@ -66,53 +29,59 @@ export const CommanModal = <T extends ModalData>({
         onClose();
     };
 
-    // Render slot content with support for components, elements, and render functions
+    // Simple slot renderer - try React component first, then render function, then element
     const renderSlot = (
-        slot: Slot<T> | undefined, 
-        slotProps: Record<string, any> = {},
-        defaultContent?: React.ReactNode
-    ) => {
-        if (!slot) return defaultContent;
-        
-        if (isComponent(slot)) {
-            const Component = slot;
-            return <Component {...slotProps} />;
-        }
-        
-        if (isRenderFn(slot)) {
-            return slot(data);
-        }
-        
-        if (isElement(slot)) {
+        slot: any,
+        props: Record<string, any> = {},
+        fallback?: React.ReactNode
+    ): React.ReactNode => {
+        if (!slot) return fallback;
+
+        // If it's a React element, return it as-is
+        if (isValidElement(slot)) {
             return slot;
         }
-        
-        return defaultContent;
+
+        // If it's a function (component or render function), call it
+        if (typeof slot === 'function') {
+            try {
+                // Try as React component first
+                return <slot {...props} />;
+            } catch {
+                // If that fails, try as render function
+                return slot(data);
+            }
+        }
+
+        // If it's a React.memo or forwardRef component (object with $$typeof)
+        if (typeof slot === 'object' && slot?.$$typeof) {
+            const Component = slot as ComponentType<any>;
+            return <Component {...props} />;
+        }
+
+        return fallback;
     };
 
-    // Render header content
     const renderHeader = () => {
         return renderSlot(
-            headerSlot, 
+            headerSlot,
             { ...headerSlotProps, data },
             title || 'Modal'
         );
     };
 
-    // Render body content
     const renderBody = () => {
         if (children) {
             return children;
         }
         
         return renderSlot(
-            bodySlot, 
+            bodySlot,
             { ...bodySlotProps, data },
             null
         );
     };
 
-    // Render footer content
     const renderFooter = () => {
         return renderSlot(
             footerSlot,
