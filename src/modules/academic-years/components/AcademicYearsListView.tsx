@@ -3,8 +3,8 @@ import {
   type GridColDef,
   type GridRenderCellParams,
 } from '@mui/x-data-grid'
-import { Box, Chip, Paper, Typography, Alert, Button, Stack } from '@mui/material'
-import { Add, Edit, Visibility, Delete } from '@mui/icons-material'
+import { Box, Chip, Paper, Typography, Alert, Button, Stack, Tooltip, IconButton } from '@mui/material'
+import { Add, Edit, Visibility, Delete, Refresh, FilterList } from '@mui/icons-material'
 import DeleteConfirmationDialog from './DeleteConfirmationDialog'
 import { AcademicYearFormView } from './AcademicYearFormView'
 import { useAcademicYearFormView } from '../hooks/useAcademicYearForm'
@@ -12,7 +12,6 @@ import AcademicYearDetailView from './AcademicYearDetailView'
 import { CommanModal } from '../../../components/CommonModal/CommonModal'
 import { useAcademicYearsList } from '../hooks/useAcademicYearsList'
 import type { AcademicYear } from '../types/academicYear'
-import { useMemo } from 'react'
 
 const ListView = () => {
   const {
@@ -49,30 +48,11 @@ const ListView = () => {
     handleCloseModal 
   } = useAcademicYearFormView({
     onSuccess: () => {
-      // Callback when form is successfully submitted
       console.log('Form submitted successfully')
+      handleCloseModal()
     },
     onRefetch: refetch
   })
-
-  // Memoize body slot props to prevent unnecessary re-renders
-  const formBodySlotProps = useMemo(() => ({
-    onSuccess: () => {
-      console.log('Form submitted successfully')
-    },
-    onRefetch: refetch,
-    onCancel: handleCloseModal,
-    academicYear: modalState.selectedAcademicYear || null,
-    mode: modalState.mode,
-  }), [refetch, handleCloseModal, modalState.selectedAcademicYear, modalState.mode])
-
-  // Memoize detail view props with proper typing
-  const detailBodySlotProps = useMemo(() => ({
-    data: detailAcademicYearData,
-    isLoading: isLoadingDetailAcademicYear,
-    error: detailAcademicYearError,
-    onRetry: refetchDetailData,
-  }), [detailAcademicYearData, isLoadingDetailAcademicYear, detailAcademicYearError, refetchDetailData])
 
   const columns: GridColDef[] = [
     {
@@ -110,12 +90,21 @@ const ListView = () => {
       headerName: 'Status',
       minWidth: 100,
       flex: 1,
-      renderCell: () => {
+      renderCell: (params: GridRenderCellParams<AcademicYear>) => {
+        const now = new Date()
+        const startDate = new Date(params.row.AcademicYearFromDate)
+        const endDate = new Date(params.row.AcademicYearToDate)
+        
+        const isActive = now >= startDate && now <= endDate
+        const isPast = now > endDate
+        const isFuture = now < startDate
+        
         return (
           <Chip
-            label='Inactive'
-            color='default'
+            label={isActive ? 'Active' : isPast ? 'Past' : 'Future'}
+            color={isActive ? 'success' : isPast ? 'default' : 'info'}
             size="small"
+            variant={isActive ? 'filled' : 'outlined'}
           />
         )
       },
@@ -128,32 +117,34 @@ const ListView = () => {
       sortable: false,
       renderCell: (params: GridRenderCellParams<AcademicYear>) => {
         return (
-          <Stack direction="row" spacing={1}>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Visibility />}
-              onClick={() => handleOpenDetailModal(params.row)}
-            >
-              View
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              startIcon={<Edit />}
-              onClick={() => handleOpenModal('edit', params.row)}
-            >
-              Edit
-            </Button>
-            <Button
-              variant="outlined"
-              size="small"
-              color="error"
-              startIcon={<Delete />}
-              onClick={() => handleDeleteClick(params.row)}
-            >
-              Delete
-            </Button>
+          <Stack direction="row" spacing={0.5}>
+            <Tooltip title="View Details">
+              <IconButton
+                size="small"
+                onClick={() => handleOpenDetailModal(params.row)}
+                sx={{ color: 'primary.main' }}
+              >
+                <Visibility fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Edit Academic Year">
+              <IconButton
+                size="small"
+                onClick={() => handleOpenModal('edit', params.row)}
+                sx={{ color: 'info.main' }}
+              >
+                <Edit fontSize="small" />
+              </IconButton>
+            </Tooltip>
+            <Tooltip title="Delete Academic Year">
+              <IconButton
+                size="small"
+                onClick={() => handleDeleteClick(params.row)}
+                sx={{ color: 'error.main' }}
+              >
+                <Delete fontSize="small" />
+              </IconButton>
+            </Tooltip>
           </Stack>
         )
       },
@@ -198,16 +189,31 @@ const ListView = () => {
   return (
     <Paper sx={{ p: 2, mt: 2 }}>
       <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-        <Typography variant="h5">
-          Academic Years
-        </Typography>
-        <Button
-          variant="contained"
-          startIcon={<Add />}
-          onClick={() => handleOpenModal('create')}
-        >
-          Add Academic Year
-        </Button>
+        <Box>
+          <Typography variant="h5" gutterBottom>
+            Academic Years
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            {totalRecords} academic years found
+          </Typography>
+        </Box>
+        <Stack direction="row" spacing={1}>
+          <Tooltip title="Refresh Data">
+            <IconButton 
+              onClick={() => refetch()}
+              disabled={loading}
+            >
+              <Refresh />
+            </IconButton>
+          </Tooltip>
+          <Button
+            variant="contained"
+            startIcon={<Add />}
+            onClick={() => handleOpenModal('create')}
+          >
+            Add Academic Year
+          </Button>
+        </Stack>
       </Stack>
       <Box sx={{ height: 600, width: '100%' }}>
         <DataGrid
@@ -257,7 +263,15 @@ const ListView = () => {
         maxWidth="lg"
         hideCloseButton={true}
         bodySlot={AcademicYearFormView}
-        bodySlotProps={formBodySlotProps}
+        bodySlotProps={{
+          onSuccess: () => {
+            console.log('Form submitted successfully')
+            handleCloseModal()
+          },
+          onRefetch: refetch,
+          academicYear: modalState.selectedAcademicYear || null,
+          mode: modalState.mode,
+        }}
       />
 
       {/* Detail View Modal */}
@@ -268,7 +282,12 @@ const ListView = () => {
         maxWidth="lg"
         hideCloseButton={false}
         bodySlot={AcademicYearDetailView}
-        bodySlotProps={detailBodySlotProps}
+        bodySlotProps={{
+          data: detailAcademicYearData,
+          isLoading: isLoadingDetailAcademicYear,
+          error: detailAcademicYearError,
+          onRetry: refetchDetailData,
+        }}
       />
     </Paper>
   )
