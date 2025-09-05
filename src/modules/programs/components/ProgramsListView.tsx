@@ -1,21 +1,24 @@
 import type React from 'react'
 import {
   DataGrid,
-  type GridColDef,
+  type GridValidRowModel,
 } from '@mui/x-data-grid'
-import { Box, Chip, Paper, Typography } from '@mui/material'
-import { useProgramsList } from '../hooks/useProgramsList'
+import { Box, Paper, Typography } from '@mui/material'
+import type { DataGridFooterProps, DataGridToolbarProps, SimpleDataGridProps } from '../../../core/types';
 
-// Slots interfaces
 interface ProgramsListSlots {
-  filter: React.ElementType
-  filterDisplay: React.ElementType
+  filter: React.ElementType;
+  filterDisplay: React.ElementType;
+  dataGridToolbar?: React.ComponentType<DataGridToolbarProps>;
+  dataGridFooter?: React.ComponentType<DataGridFooterProps>;
 }
 
-// SlotProps interfaces
-interface ProgramsListSlotProps {
-  filter?: Record<string, unknown>
-  filterDisplay?: Record<string, unknown>
+interface ProgramsListSlotProps<R extends GridValidRowModel = GridValidRowModel> {
+  filterProps?: Record<string, unknown>
+  filterDisplayProps?: Record<string, unknown>
+  dataGridProps: SimpleDataGridProps<R>;
+  dataGridToolbarProps?: DataGridToolbarProps
+  dataGridFooterProps?: DataGridFooterProps
 }
 
 interface ProgramsListProps {
@@ -24,109 +27,27 @@ interface ProgramsListProps {
 }
 
 const ProgramsListView = ({ slots, slotProps }: ProgramsListProps) => {
-  const {
-    programs,
-    currentPage,
-    pageSize,
-    totalRecords,
-    loading,
-    error,
-    handlePaginationModelChange,
-    handleSortModelChange,
-  } = useProgramsList()
 
-  const columns: GridColDef[] = [
-    {
-      field: 'ProgramPK',
-      headerName: 'Program ID',
-      minWidth: 200,
-      flex: 0.8,
-    },
-    {
-      field: 'ProgramName',
-      headerName: 'Program Name',
-      minWidth: 180,
-      flex: 1.2,
-    },
-    {
-      field: 'ProgramCode',
-      headerName: 'Code',
-      minWidth: 80,
-      flex: 0.4,
-    },
-    {
-      field: 'UniversityShortName',
-      headerName: 'University',
-      minWidth: 80,
-      flex: 0.4,
-    },
-    {
-      field: 'CourseShortName',
-      headerName: 'Course',
-      minWidth: 100,
-      flex: 0.6,
-    },
-    {
-      field: 'InstituteShortName',
-      headerName: 'Institute',
-      minWidth: 80,
-      flex: 0.4,
-    },
-    {
-      field: 'DepartmentShortName',
-      headerName: 'Department',
-      minWidth: 80,
-      flex: 0.4,
-    },
-    {
-      field: 'FacultyShortName',
-      headerName: 'Faculty',
-      minWidth: 80,
-      flex: 0.4,
-    },
-    {
-      field: 'SpecializationShortName',
-      headerName: 'Specialization',
-      minWidth: 120,
-      flex: 0.8,
-    },
-    {
-      field: 'status',
-      headerName: 'Status',
-      minWidth: 100,
-      flex: 0.5,
-      renderCell: () => {
-        return (
-          <Chip
-            label='Active'
-            color='success'
-            size="small"
-          />
-        )
-      },
-    },
-  ]
+  // if (error) {
+  //   return (
+  //     <Paper sx={{ p: 3, mt: 2 }}>
+  //       <Typography color="error">Error loading programs data</Typography>
+  //     </Paper>
+  //   )
+  // }
 
-  if (error) {
-    return (
-      <Paper sx={{ p: 3, mt: 2 }}>
-        <Typography color="error">Error loading programs data</Typography>
-      </Paper>
-    )
-  }
+  const FilterSlot = slots?.filter;
+  const FilterDisplaySlot = slots?.filterDisplay;
+  const DataGridToolbarSlot = slots?.dataGridToolbar;
+  const DataGridFooterSlot = slots?.dataGridFooter;
 
-  // Get slot components - use defaults if not provided
-  const FilterSlot = slots?.filter
-  const FilterDisplaySlot = slots?.filterDisplay
+  const { columns, rows, currentPage, pageSize, totalRecords, loading, handlePaginationModelChange, handleSortModelChange } = slotProps!.dataGridProps;
 
   return (
     <>
-      {/* Render Filter Component */}
-      {FilterSlot && <FilterSlot {...(slotProps?.filter || {})} />}
-      
-      {/* Render Filter Display Component */}
-      {FilterDisplaySlot && <FilterDisplaySlot {...(slotProps?.filterDisplay || {})} />}
-      
+      {FilterSlot && <FilterSlot {...(slotProps?.filterProps || {})} />}
+      {FilterDisplaySlot && <FilterDisplaySlot {...(slotProps?.filterDisplayProps || {})} />}
+
       {/* Data Grid */}
       <Paper sx={{ p: 2, mt: 2 }}>
         <Typography variant="h5" gutterBottom>
@@ -134,7 +55,7 @@ const ProgramsListView = ({ slots, slotProps }: ProgramsListProps) => {
         </Typography>
         <Box sx={{ height: 600, width: '100%' }}>
           <DataGrid
-            rows={programs}
+            rows={rows}
             columns={columns}
             paginationMode="server"
             sortingMode="server"
@@ -145,19 +66,14 @@ const ProgramsListView = ({ slots, slotProps }: ProgramsListProps) => {
             loading={loading}
             pageSizeOptions={[10, 20, 50, 100]}
             disableRowSelectionOnClick
+            slots={{
+              toolbar: DataGridToolbarSlot,
+              footer: DataGridFooterSlot
+            }}
             slotProps={{
               loadingOverlay: {
                 variant: 'skeleton',
                 noRowsVariant: 'skeleton',
-              },
-            }}
-            sx={{
-              '& .MuiDataGrid-cell': {
-                borderBottom: '1px solid #e0e0e0',
-              },
-              '& .MuiDataGrid-columnHeaders': {
-                backgroundColor: '#f5f5f5',
-                borderBottom: '2px solid #e0e0e0',
               },
             }}
           />
